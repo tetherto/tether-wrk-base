@@ -11,7 +11,7 @@ class TplWrk extends WrkBase {
     this.init()
     this.start()
   }
-  
+
   init () {
     super.init()
 
