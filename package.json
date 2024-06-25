@@ -1,24 +1,16 @@
 {
-  "name": "tpl-wrk",
+  "name": "tether-wrk-base",
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "lint" : "standard",
-    "lint:fix" : "standard --fix"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/peartree-to/tpl-wrk.git"
+    "lint": "standard",
+    "lint:fix": "standard --fix"
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/peartree-to/tpl-wrk/issues"
-  },
-  "homepage": "https://github.com/peartree-to/tpl-wrk#readme",
   "dependencies": {
     "async": "^3.2.5",
-    "bfx-svc-boot-js": "https://github.com/bitfinexcom/bfx-svc-boot-js.git",
+    "bfx-svc-boot-js": "git+https://github.com/bitfinexcom/bfx-svc-boot-js.git",
     "bfx-wrk-base": "git+https://github.com/bitfinexcom/bfx-wrk-base.git",
     "debug": "^4.3.4",
     "dice-facs-shell": "git+https://github.com/PearTree-to/dice-facs-shell.git#init",
@@ -27,5 +19,13 @@
   },
   "devDependencies": {
     "standard": "^17.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tetherto/tether-wrk-base.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tetherto/tether-wrk-base/issues"
+  },
+  "homepage": "https://github.com/tetherto/tether-wrk-base#readme"
 }
