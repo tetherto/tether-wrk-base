@@ -3,7 +3,6 @@
 const WrkBase = require('bfx-wrk-base')
 const async = require('async')
 const debug = require('debug')('wrk:proc')
-const DHT = require('hyperdht')
 const b4a = require('b4a')
 
 class TplWrk extends WrkBase {
@@ -32,13 +31,13 @@ class TplWrk extends WrkBase {
     return this.net_r0.rpcServer.publicKey
   }
 
-  getConfigRpcKeyPair () {
-    if (this.conf.rpc_private_key) {
+  _getConfigRpcKeyPair () {
+    if (this.conf?.rpc_keypair && this.conf.rpc_keypair?.secretKey && this.conf.rpc_keypair?.publicKey ) {
       try {
-        const seed = b4a.from(this.conf.rpc_private_key, 'hex')
-        const keyPair = DHT.keyPair(seed)
+        const secretKey  = b4a.from(this.conf.rpc_keypair.secretKey, 'hex')
+        const publicKey = b4a.from(this.conf.rpc_keypair.publicKey, 'hex')
 
-        return keyPair
+        return { publicKey, secretKey }
       } catch (e) {
         debug(`ERR_GEN_KEY_PAIR: ${e}`)
         return null
@@ -52,7 +51,7 @@ class TplWrk extends WrkBase {
     async.series([
       next => { super._start(next) },
       async () => {
-        const keyPair = this.getConfigRpcKeyPair()
+        const keyPair = this._getConfigRpcKeyPair()
 
         await this.net_r0.startRpcServer(keyPair)
         const rpcServer = this.net_r0.rpcServer

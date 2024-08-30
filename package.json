@@ -15,8 +15,7 @@
     "bfx-wrk-base": "git+https://github.com/bitfinexcom/bfx-wrk-base.git",
     "debug": "^4.3.4",
     "hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git",
-    "hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git",
-    "hyperdht": "^6.16.3"
+    "hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git"
   },
   "devDependencies": {
     "standard": "^17.1.0"
