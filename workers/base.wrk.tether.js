@@ -5,21 +5,15 @@ const async = require('async')
 const debug = require('debug')('wrk:proc')
 const b4a = require('b4a')
 
-class TplWrk extends WrkBase {
+class TetherWrkBase extends WrkBase {
   init () {
     super.init()
 
     this.loadConf('common')
 
     this.setInitFacs([
-      ['fac', 'hp-svc-facs-store', 's0', 's0', {
-        storeDir: `store/${this.ctx.rack}`
-      }, -5],
-      ['fac', 'hp-svc-facs-net', 'r0', 'r0', () => {
-        return {
-          fac_store: this.store_s0
-        }
-      }, 0]
+      ['fac', 'hp-svc-facs-store', 's0', 's0', { storeDir: `store/${this.ctx.rack}` }, 0],
+      ['fac', 'hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0 }), 1]
     ])
   }
 
@@ -32,9 +26,9 @@ class TplWrk extends WrkBase {
   }
 
   _getConfigRpcKeyPair () {
-    if (this.conf?.rpc_keypair && this.conf.rpc_keypair?.secretKey && this.conf.rpc_keypair?.publicKey ) {
+    if (this.conf?.rpc_keypair && this.conf.rpc_keypair?.secretKey && this.conf.rpc_keypair?.publicKey) {
       try {
-        const secretKey  = b4a.from(this.conf.rpc_keypair.secretKey, 'hex')
+        const secretKey = b4a.from(this.conf.rpc_keypair.secretKey, 'hex')
         const publicKey = b4a.from(this.conf.rpc_keypair.publicKey, 'hex')
 
         return { publicKey, secretKey }
@@ -56,7 +50,7 @@ class TplWrk extends WrkBase {
         await this.net_r0.startRpcServer(keyPair)
         const rpcServer = this.net_r0.rpcServer
 
-        rpcServer.respond('echo', x => x)
+        rpcServer.respond('ping', x => x)
 
         this.status.rpcPublicKey = this.getRpcKey().toString('hex')
 
@@ -66,4 +60,4 @@ class TplWrk extends WrkBase {
   }
 }
 
-module.exports = TplWrk
+module.exports = TetherWrkBase
