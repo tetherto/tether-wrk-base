@@ -2,7 +2,7 @@
 
 const WrkBase = require('bfx-wrk-base')
 const async = require('async')
-const debug = require('debug')('wrk:proc')
+const pino = require('pino')
 const b4a = require('b4a')
 
 class TetherWrkBase extends WrkBase {
@@ -15,10 +15,19 @@ class TetherWrkBase extends WrkBase {
       ['fac', 'hp-svc-facs-store', 's0', 's0', { storeDir: `store/${this.ctx.rack}` }, 0],
       ['fac', 'hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0 }), 1]
     ])
+
+    this.logger = pino({ 
+      name: 'wrk:proc', 
+      level: this.ctx.debug ? 'debug' : 'info',
+      mixin: this._logMixin.bind(this)
+    })
   }
 
-  debug (data) {
-    debug(`[THING/${this.rackId}]`, data)
+  _logMixin () {
+    return {
+      wtype: this.ctx.wtype,
+      pid: process.pid
+    }
   }
 
   getRpcKey () {
@@ -33,7 +42,7 @@ class TetherWrkBase extends WrkBase {
 
         return { publicKey, secretKey }
       } catch (e) {
-        debug(`ERR_GEN_KEY_PAIR: ${e}`)
+        this.logger.error(`ERR_GEN_KEY_PAIR: ${e}`)
         return null
       }
     }

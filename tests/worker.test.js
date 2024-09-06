@@ -8,7 +8,7 @@ test('worker ping', async (t) => {
 
   const worker = new Worker(
     {},
-    { env: 'test', root: path.resolve(__dirname, '..') }
+    { env: 'test', root: path.resolve(__dirname, '..'), wtype: 'tether-wrk-base' }
   )
 
   worker.init()
@@ -22,6 +22,4 @@ test('worker ping', async (t) => {
   await new Promise((resolve) => worker.stop(resolve))
 
   t.is(res.toString(), 'pong')
-
-  // TODO: test not terminating
 })
