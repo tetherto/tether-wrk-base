@@ -17,17 +17,9 @@ class TetherWrkBase extends WrkBase {
     ])
 
     this.logger = pino({ 
-      name: 'wrk:proc', 
-      level: this.ctx.debug ? 'debug' : 'info',
-      mixin: this._logMixin.bind(this)
+      name: `wrk:proc:${this.ctx.wtype}:${process.pid}`, 
+      level: this.ctx.debug ? 'debug' : 'info'
     })
-  }
-
-  _logMixin () {
-    return {
-      wtype: this.ctx.wtype,
-      pid: process.pid
-    }
   }
 
   getRpcKey () {
