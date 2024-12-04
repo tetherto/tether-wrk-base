@@ -1,0 +1,46 @@
+{
+  "name": "tether-wrk-base",
+  "version": "0.1.0",
+  "description": "Tether Worker",
+  "scripts": {
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "test": "brittle tests/*.js"
+  },
+  "author": {
+    "name": "prdn",
+    "email": "paolo@bitfinex.com"
+  },
+  "maintainers": [
+    {
+      "name": "prdn",
+      "email": "paolo@bitfinex.com"
+    }
+  ],
+  "keywords": [
+    "tether",
+    "worker"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "async": "3.2.5",
+    "bfx-svc-boot-js": "git+https://github.com/bitfinexcom/bfx-svc-boot-js.git",
+    "bfx-wrk-base": "git+https://github.com/bitfinexcom/bfx-wrk-base.git",
+    "hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git",
+    "hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git",
+    "pino": "9.4.0"
+  },
+  "devDependencies": {
+    "@hyperswarm/rpc": "3.3.2",
+    "brittle": "3.7.0",
+    "standard": "17.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tetherto/tether-wrk-base.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tetherto/tether-wrk-base/issues"
+  },
+  "homepage": "https://github.com/tetherto/tether-wrk-base#readme"
+}
