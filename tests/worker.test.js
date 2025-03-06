@@ -8,7 +8,7 @@ test('worker ping', async (t) => {
 
   const worker = new Worker(
     {},
-    { env: 'test', root: path.resolve(__dirname, '..'), wtype: 'tether-wrk-base' }
+    { env: 'test', root: path.resolve(__dirname, '.'), wtype: 'tether-wrk-base' }
   )
 
   worker.init()

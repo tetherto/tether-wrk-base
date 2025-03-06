@@ -5,7 +5,9 @@
   "scripts": {
     "lint": "standard",
     "lint:fix": "standard --fix",
-    "test": "brittle tests/*.js"
+    "test": "brittle tests/*.js",
+    "test:coverage": "brittle --coverage tests/{,**/}*.test.js",
+    "posttest": "npm run lint"
   },
   "author": {
     "name": "prdn",
