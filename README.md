@@ -32,7 +32,11 @@ This method initializes the class by:
 
 #### `getRpcKey()`
 
-This method returns the public key of the worker.
+This method returns the RPC public key of the worker.
+
+#### `getRpcClientKey()`
+
+This method returns the RPC client key of the worker.
 
 #### `_startRpcServer()`
 
