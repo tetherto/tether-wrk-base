@@ -25,6 +25,10 @@ class TetherWrkBase extends WrkBase {
     return this.net_r0.rpcServer.publicKey
   }
 
+  getRpcClientKey () {
+    return this.net_r0.rpcServer.dht.defaultKeyPair.publicKey
+  }
+
   async _startRpcServer () {
     await this.net_r0.startRpcServer()
   }
@@ -39,6 +43,7 @@ class TetherWrkBase extends WrkBase {
         rpcServer.respond('ping', x => x)
 
         this.status.rpcPublicKey = this.getRpcKey().toString('hex')
+        this.status.rpcClientKey = this.getRpcClientKey().toString('hex')
 
         this.saveStatus()
       }
