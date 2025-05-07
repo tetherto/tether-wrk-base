@@ -16,5 +16,9 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 18.x
-    - run: npm install
-    - run: npm test
+    - name: Run Setup Script
+      run: ./setup-config.sh
+    - name: Install Dependencies
+      run: npm install
+    - name: Run Tests
+      run: npm test
