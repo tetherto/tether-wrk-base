@@ -10,7 +10,7 @@ hook('setup hook', async function (t) {
   ({ wrk, rpc } = await setupHook(t))
 })
 
-test('rpc key and client key test', async function (t) {
+test('rpc public key and client key test', async function (t) {
   const pubKey = wrk.getRpcKey()
   const clientKey = wrk.getRpcClientKey()
 
