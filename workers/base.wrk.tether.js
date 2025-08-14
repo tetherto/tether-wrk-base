@@ -15,7 +15,7 @@ class TetherWrkBase extends WrkBase {
 
     this.setInitFacs([
       ['fac', 'hp-svc-facs-store', 's0', 's0', { storeDir }, 0],
-      ['fac', 'hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0 }), 1]
+      ['fac', 'hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0, swarmDestroyReq: true }), 1]
     ])
 
     this.logger = pino({
