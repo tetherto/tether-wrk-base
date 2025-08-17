@@ -2,7 +2,7 @@
 
 const WrkBase = require('bfx-wrk-base')
 const async = require('async')
-const pino = require('pino')
+const pino = require('pino').default
 
 class TetherWrkBase extends WrkBase {
   init () {
@@ -18,11 +18,21 @@ class TetherWrkBase extends WrkBase {
       ['fac', 'hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0 }), 1]
     ])
 
-    this.logger = pino({
-      name: `wrk:proc:${this.ctx.wtype}:${process.pid}`,
-      level: this.conf.debug || this.ctx.debug ? 'debug' : 'info',
-      enabled: this.ctx.logging ?? true
-    })
+    const stdout = pino.destination(1)
+    const stderr = pino.destination(2)
+    this.logger = pino(
+      {
+        name: `wrk:proc:${this.ctx.wtype}:${process.pid}`,
+        level: this.conf.debug || this.ctx.debug ? 'debug' : 'info',
+        enabled: this.ctx.logging ?? true
+      },
+      pino.multistream([
+        { level: 'info', stream: stdout },
+        { level: 'error', stream: stderr },
+        { level: 'warn', stream: stderr },
+        { level: 'fatal', stream: stderr }
+      ])
+    )
   }
 
   getRpcKey () {
