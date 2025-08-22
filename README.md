@@ -1,11 +1,97 @@
 # tether-wrk-base
 A base worker class extending `bfx-wrk-base`.
 
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Architecture](#architecture)
+  1. [Object Model](#object-model)
+  2. [Worker Types](#worker-types)
+3. [Documentation](#documentation)
+4. [Configuration](#configuration)
+
 ## Introduction
 
 The `tether-wrk-base` class is designed to initialize and configure services for the base worker. It simplifies the setup of facilities such as service storage and networking, starts an RPC server, and provides methods for handling RPC requests.
 
-### Architecture
+## Architecture
+
+### Object Model
+
+The following is a fragment of [Moria object model](https://github.com/tetherto/moria-docs/tree/main/documentation/arch) that contains the abstract class representing "thing" (highlighted in blue). The rounded nodes reprsent abstract classes and the one square node represents a concrete class:
+
+```mermaid
+---
+title: Object Model of Moria
+---
+flowchart BT
+    bfx-wrk-base@{ shape: stadium, label: "*bfx-wrk-base*" }
+
+    tether-wrk-base@{ shape: stadium, label: "*tether-wrk-base*" }
+    tether-wrk-base--->bfx-wrk-base
+
+    moria-tlp-wrk-thing@{ shape: stadium, label: "*moria-tlp-wrk-thing*" }
+    moria-tlp-wrk-thing--->tether-wrk-base
+
+
+    moria-tlp-wrk-electricity@{ shape: stadium, label: "*moria-tlp-wrk-electricity*" }
+    moria-tlp-wrk-electricity--->moria-tlp-wrk-thing
+
+    moria-tlp-wrk-switchgear@{ shape: stadium, label: "*moria-tlp-wrk-switchgear*" }
+    moria-tlp-wrk-switchgear--->moria-tlp-wrk-thing
+
+    moria-tlp-wrk-miner@{ shape: stadium, label: "*moria-tlp-wrk-miner*" }
+    moria-tlp-wrk-miner--->moria-tlp-wrk-thing
+
+    moria-tlp-wrk-container@{ shape: stadium, label: "*moria-tlp-wrk-container*" }
+    moria-tlp-wrk-container--->moria-tlp-wrk-thing
+
+    moria-tlp-wrk-powermeter@{ shape: stadium, label: "*moria-tlp-wrk-powermeter*" }
+    moria-tlp-wrk-powermeter--->moria-tlp-wrk-thing
+
+    moria-tlp-wrk-sensor@{ shape: stadium, label: "*moria-tlp-wrk-sensor*" }
+    moria-tlp-wrk-sensor--->moria-tlp-wrk-thing
+
+    moria-tlp-wrk-minerpool@{ shape: stadium, label: "*moria-tlp-wrk-minerpool*" }
+    moria-tlp-wrk-minerpool--->moria-tlp-wrk-thing
+
+    moria-wrk-ext-mempool["moria-wrk-ext-mempool"]
+    moria-wrk-ext-mempool--->moria-tlp-wrk-thing
+
+    style tether-wrk-base fill:#005,stroke-width:4px
+```
+
+
+
+### Worker Types
+The system implements a sophisticated multi-level inheritance hierarchy:
+
+#### Inheritance Levels
+TODO Verify
+```
+Level 1: bfx-wrk-base (Foundation)
+    ↓
+Level 2: tether-wrk-base (Foundation)
+    ↓
+Level 3: moria-tlp-wrk-thing/WrkProcVar (Thing Management Base)
+    ↓
+Level 4: Device Category Templates
+    ↓
+Level 5: Brand/Model Specific Implementations
+```
+
+#### Implementation Pattern
+TODO Verify
+Each level provides increasing specialization:
+- **Level 1**: Provides worker infrastructure (lifecycle, facilities, configuration)
+- **Level 2**: Provides worker infrastructure (lifecycle, facilities, configuration)
+- **Level 3**: Defines abstract methods like `connectThing()`, `collectThingSnap()`
+- **Level 4**: May provide default implementations or remain abstract
+- **Level 5**: Implements device-specific logic:
+
+Moria implements a hierarchical class structure for different worker types:
+
+
 
 To run this worker, the `init()` function must be called in the constructor during the worker's initialization.
 
