@@ -33,12 +33,12 @@ module.exports = function hyperswarmTransport (opts = {}) {
     sendAuthMessage(socket, opts.app, opts.secretKey)
 
     socket.on('close', () => {
-      console.log('Peer disconnected:', peerInfo)
+      console.log('Peer disconnected:', peerInfo.publicKey.toString('hex'))
       connection = null
     })
 
     socket.on('error', (err) => {
-      console.error('Socket error:', err.message)
+      console.error('Socket error:', err.message, peerInfo.publicKey.toString('hex'))
       connection = null
     })
   })
@@ -152,27 +152,6 @@ module.exports = function hyperswarmTransport (opts = {}) {
     return 'trace'
   }
 
-  function waitForConnection (timeout = 10000) {
-    if (connection) {
-      return Promise.resolve()
-    }
-
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        swarm.removeListener('connection', onConnection)
-        reject(new Error('Connection timeout'))
-      }, timeout)
-
-      const onConnection = () => {
-        clearTimeout(timer)
-        swarm.removeListener('connection', onConnection)
-        resolve()
-      }
-
-      swarm.on('connection', onConnection)
-    })
-  }
-
   async function close () {
     connection.end()
     connection = null
@@ -184,11 +163,6 @@ module.exports = function hyperswarmTransport (opts = {}) {
   return build(
     async function (source) {
       try {
-        if (opts.waitForConnection !== false) {
-          await waitForConnection(opts.connectionTimeout || 10000)
-          console.log('Connected to peer, starting to process logs')
-        }
-
         // Process each log entry
         for await (const obj of source) {
           await broadcastLog(obj)

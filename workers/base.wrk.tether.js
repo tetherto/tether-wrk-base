@@ -29,20 +29,38 @@ class TetherWrkBase extends WrkBase {
           level: this.conf.debug || this.ctx.debug ? 'debug' : 'info',
           enabled: this.ctx.logging ?? true,
           transport: {
-            target: './lib/pino-hyperswarm-exporter',
-            options: {
-              topic: 'pino-logs-channel-1',
-              app: name,
-              secretKey: 'my-secret-key-123'
-            }
+            targets: [
+              {
+                target: './lib/pino-hyperswarm-exporter',
+                options: {
+                  topic: 'pino-logs-channel-1',
+                  app: name,
+                  secretKey: 'my-secret-key-123'
+                }
+              },
+              {
+                target: 'pino/file',
+                options: { destination: 1 },
+                level: 'info'
+              },
+              {
+                target: 'pino/file',
+                options: { destination: 2 },
+                level: 'error'
+              },
+              {
+                target: 'pino/file',
+                options: { destination: 2 },
+                level: 'warn'
+              },
+              {
+                target: 'pino/file',
+                options: { destination: 2 },
+                level: 'fatal'
+              }
+            ]
           }
-        },
-        pino.multistream([
-          { level: 'info', stream: stdout },
-          { level: 'error', stream: stderr },
-          { level: 'warn', stream: stderr },
-          { level: 'fatal', stream: stderr }
-        ], { dedupe: true })
+        }
       )
     } else {
       this.logger = pino(
