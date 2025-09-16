@@ -30,7 +30,7 @@
     "bfx-wrk-base": "git+https://github.com/bitfinexcom/bfx-wrk-base.git",
     "hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git",
     "hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git",
-    "pino": "9.5.0"
+    "svc-facs-logging": "git+https://github.com/tetherto/svc-facs-logging.git"
   },
   "devDependencies": {
     "@hyperswarm/rpc": "3.3.2",

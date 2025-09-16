@@ -1,0 +1,10 @@
+{
+  "l0": {
+    "debug": 0,
+    "transport": {
+      "enabled": true,
+      "secretKey": "my-secret-key-123",
+      "topic": "pino-logs-channel-1"
+    }
+  }
+}
