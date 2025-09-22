@@ -47,7 +47,7 @@ class TetherWrkBase extends WrkBase {
   healthCheck () {
     return {
       id: this.status.instanceId,
-      status: 'ok',
+      ok: true,
       ts: Date.now()
     }
   }
