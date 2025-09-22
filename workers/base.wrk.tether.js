@@ -2,6 +2,7 @@
 
 const WrkBase = require('bfx-wrk-base')
 const async = require('async')
+const crypto = require('crypto')
 
 class TetherWrkBase extends WrkBase {
   init () {
@@ -32,16 +33,39 @@ class TetherWrkBase extends WrkBase {
     await this.net_r0.startRpcServer()
   }
 
+  getInstanceId () {
+    const id = this.status.instanceId
+
+    if (id) {
+      return id
+    }
+
+    const newId = `${this.prefix}-${crypto.randomUUID()}`
+    return newId
+  }
+
+  healthCheck () {
+    return {
+      id: this.status.instanceId,
+      status: 'ok',
+      ts: Date.now()
+    }
+  }
+
   _start (cb) {
     async.series([
       next => { super._start(next) },
       async () => {
         this.logger = this.logging_l0.logger
+        this.status.instanceId = this.getInstanceId()
 
         await this._startRpcServer()
         const rpcServer = this.net_r0.rpcServer
 
         rpcServer.respond('ping', x => x)
+        rpcServer.respond('health', async (req) =>
+          await this.net_r0.handleReply('healthCheck', req)
+        )
 
         this.status.rpcPublicKey = this.getRpcKey().toString('hex')
         this.status.rpcClientKey = this.getRpcClientKey().toString('hex')
