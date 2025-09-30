@@ -35,8 +35,10 @@ class TetherWrkBase extends WrkBase {
 
   getInstanceId () {
     if (!this.status.instanceId) {
-      return `${this.prefix}-${crypto.randomUUID()}`
+      this.status.instanceId = `${this.prefix}-${crypto.randomUUID()}`
+      this.saveStatus()
     }
+
     return this.status.instanceId
   }
 
