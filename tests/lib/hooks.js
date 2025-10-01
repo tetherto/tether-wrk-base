@@ -1,6 +1,7 @@
 'use strict'
 
 const Worker = require('../../workers/base.wrk.tether.js')
+const fs = require('fs')
 const path = require('path')
 const tmp = require('test-tmp')
 const RPC = require('@hyperswarm/rpc')
@@ -8,13 +9,16 @@ const RPC = require('@hyperswarm/rpc')
 const setupHook = async function (t) {
   const dir = await tmp(t)
   const rpc = new RPC()
+  const root = path.resolve(__dirname, '../..')
+  const statusDir = path.join(root, 'status')
+  fs.rmSync(statusDir, { recursive: true, force: true })
 
   const wrk = new Worker(
     {},
     {
       env: 'test',
       tmpdir: path.resolve(dir, '.'),
-      root: path.resolve(__dirname, '../..'),
+      root,
       wtype: 'tether-wrk-base'
     }
   )
