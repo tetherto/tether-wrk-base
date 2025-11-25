@@ -1,3 +1,7 @@
 {
-  "debug": 0
+  "debug": 0,
+  "netOpts": {
+    "poolLinger": 600000,
+    "timeout": 60000
+  }
 }

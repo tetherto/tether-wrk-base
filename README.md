@@ -58,11 +58,18 @@ This method manages the complete startup process of the worker:
 
   ```json
   {
-    "debug": 0
+    "debug": 0,
+    "netOpts": {
+      "poolLinger": 600000,
+      "timeout": 60000
+    }
   }
   ```
 
-  The `debug` key controls the logging level in the worker.
+  - **`debug`**: Controls the logging level in the worker.
+  - **`netOpts`**: Optional. Configures Hyperswarm RPC pool behavior:
+    - **`poolLinger`**: Time (ms) before idle RPC pools are destroyed. Default: 300000. Recommended: 600000 for production.
+    - **`timeout`**: RPC request timeout (ms). Default: 30000. Recommended: 60000 for production.
 
 - The class sets up the following facilities:
 
