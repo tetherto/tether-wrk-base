@@ -60,6 +60,16 @@ class TetherWrkBase extends WrkBase {
         this.status.rpcClientKey = this.getRpcClientKey().toString('hex')
 
         this.saveStatus()
+
+        // Add error handlers to prevent worker crashes from unhandled Hyperswarm/DHT errors
+        // This catches edge cases like PEER_NOT_FOUND when indexer crashes mid-request
+        if (this.net_r0?.rpc?.dht) {
+          // DHT errors can be emitted as events, bypassing try/catch in application code
+          this.net_r0.rpc.dht.on('error', (err) => {
+            // Log but don't crash - the retry logic in blockchain.svc.js will handle transient failures
+            this.logger.warn({ err }, 'Hyperswarm DHT error (handled)')
+          })
+        }
       }
     ], cb)
   }
