@@ -3,22 +3,44 @@
 const WrkBase = require('bfx-wrk-base')
 const async = require('async')
 const crypto = require('crypto')
+const fs = require('fs')
+const path = require('path')
 
 class TetherWrkBase extends WrkBase {
+  _loadFacConf (facName) {
+    const fprefix = this.ctx.env
+    const dirname = path.join(this.ctx.root, 'config', 'facs')
+
+    let confPath = path.join(dirname, `${facName}.config.json`)
+    const envConfPath = path.join(dirname, `${fprefix}.${facName}.config.json`)
+    if (fprefix && fs.existsSync(envConfPath)) {
+      confPath = envConfPath
+    }
+
+    if (fs.existsSync(confPath)) {
+      return JSON.parse(fs.readFileSync(confPath, 'utf8'))
+    }
+    return {}
+  }
+
   init () {
     super.init()
 
     this.loadConf('common')
+    const netConf = this._loadFacConf('net')
+
     const storeDir = (this.ctx.env === 'test' && this.ctx.tmpdir)
       ? `${this.ctx.tmpdir}/store/${this.storeDir || this.ctx.rack}`
       : `store/${this.storeDir || this.ctx.rack}`
 
     const name = this.getInstanceId()
+    const netOpts = netConf.r0 || {}
+
     this.setInitFacs([
       ['fac', 'hp-svc-facs-store', 's0', 's0', { storeDir }, 0],
       ['fac', 'hp-svc-facs-net', 'r0', 'r0', () => ({
         fac_store: this.store_s0,
-        ...this.conf.netOpts
+        ...netOpts
       }), 1],
       ['fac', 'svc-facs-logging', 'l0', 'l0', { name }, 2]
     ])
@@ -60,16 +82,6 @@ class TetherWrkBase extends WrkBase {
         this.status.rpcClientKey = this.getRpcClientKey().toString('hex')
 
         this.saveStatus()
-
-        // Add error handlers to prevent worker crashes from unhandled Hyperswarm/DHT errors
-        // This catches edge cases like PEER_NOT_FOUND when indexer crashes mid-request
-        if (this.net_r0?.rpc?.dht) {
-          // DHT errors can be emitted as events, bypassing try/catch in application code
-          this.net_r0.rpc.dht.on('error', (err) => {
-            // Log but don't crash - the retry logic in blockchain.svc.js will handle transient failures
-            this.logger.warn({ err }, 'Hyperswarm DHT error (handled)')
-          })
-        }
       }
     ], cb)
   }

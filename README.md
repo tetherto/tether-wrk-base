@@ -58,18 +58,11 @@ This method manages the complete startup process of the worker:
 
   ```json
   {
-    "debug": 0,
-    "netOpts": {
-      "poolLinger": 600000,
-      "timeout": 60000
-    }
+    "debug": 0
   }
   ```
 
   - **`debug`**: Controls the logging level in the worker.
-  - **`netOpts`**: Optional. Configures Hyperswarm RPC pool behavior:
-    - **`poolLinger`**: Time (ms) before idle RPC pools are destroyed. Default: 300000. Recommended: 600000 for production.
-    - **`timeout`**: RPC request timeout (ms). Default: 30000. Recommended: 60000 for production.
 
 - The class sets up the following facilities:
 
@@ -83,13 +76,17 @@ This method manages the complete startup process of the worker:
     ```json
     {
       "r0": {
+        "poolLinger": 600000,
+        "timeout": 60000,
         "allow": [],
         "allowLocal": true
       }
     }
     ```
 
-    - **`allow`**: An array used as an allowlist to validate incoming connections based on their `remotePublicKey`.  
+    - **`poolLinger`**: Time (ms) before idle RPC pools are destroyed. Default: 300000. Recommended: 600000 for production.
+    - **`timeout`**: RPC request timeout (ms). Default: 30000. Recommended: 60000 for production.
+    - **`allow`**: An array used as an allowlist to validate incoming connections based on their `remotePublicKey`.
     - **`allowLocal`**: If set to `true`, the function allows connections originating from the local IP address.
 
 - The `setup-config.sh` script is used to convert all `config.json.example` files into `config.json`.

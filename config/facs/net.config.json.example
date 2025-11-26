@@ -1,4 +1,6 @@
 {
   "r0": {
+    "poolLinger": 600000,
+    "timeout": 60000
   }
 }
