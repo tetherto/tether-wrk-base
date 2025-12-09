@@ -1,6 +1,6 @@
 'use strict'
 
-const WrkBase = require('bfx-wrk-base')
+const WrkBase = require('@bitfinex/bfx-wrk-base')
 const async = require('async')
 const crypto = require('crypto')
 
