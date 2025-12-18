@@ -37,24 +37,6 @@ class TetherWrkBase extends WrkBase {
     return this.status.instanceId
   }
 
-  async addStoreForDataSync (store, discoveryKey = null, useBaseSwarm = false) {
-    if (!store) throw new Error('ERR_INVALID_STORE')
-
-    let swarm
-    if (useBaseSwarm) {
-      await this.net_r0.startSwarm()
-      swarm = this.net_r0.swarm
-    } else {
-      swarm = await this.net_r0.createNewSwarm('backupSwarm')
-    }
-
-    this.swarmDiscovery = swarm.join(discoveryKey || this.getRpcKey())
-    swarm.on('connection', (connection) => {
-      this.logger.info('Swarm: Peer connected')
-      store.replicate(connection)
-    })
-  }
-
   getDbMeta () {
     // override to return array of cores' name, key, keyEncoding
     return []
@@ -83,15 +65,6 @@ class TetherWrkBase extends WrkBase {
         this.status.rpcClientKey = this.getRpcClientKey().toString('hex')
 
         this.saveStatus()
-      }
-    ], cb)
-  }
-
-  _stop (cb) {
-    async.series([
-      next => { super._stop(next) },
-      async () => {
-        if (this.swarmDiscovery) await this.swarmDiscovery.destroy()
       }
     ], cb)
   }
