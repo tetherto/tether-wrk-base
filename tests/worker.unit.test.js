@@ -31,18 +31,13 @@ test('rpc public key and client key test', async function (t) {
 
 test('instance id test', async function (t) {
   const statusPath = path.join(wrk.ctx.root, 'status', `${wrk.prefix}.json`)
+  const uuidRegex = /^tether-wrk-base-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 
-  const initialId = wrk.status.instanceId
-  t.is(initialId, undefined)
-
-  const firstCallId = wrk.getInstanceId()
-  t.ok(/^tether-wrk-base-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(firstCallId))
-
-  const secondCallId = wrk.getInstanceId()
-  t.is(secondCallId, firstCallId)
+  t.ok(uuidRegex.test(wrk.status.instanceId))
+  t.is(wrk.getInstanceId(), wrk.status.instanceId)
 
   const fileInstanceId = JSON.parse(fs.readFileSync(statusPath, 'utf-8')).instanceId
-  t.is(fileInstanceId, firstCallId)
+  t.is(fileInstanceId, wrk.status.instanceId)
 })
 
 hook('teardown hook', async function (t) {
