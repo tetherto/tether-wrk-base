@@ -25,7 +25,7 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
-    "@bitfinex/bfx-wrk-base": "git+https://github.com/bitfinexcom/bfx-wrk-base.git",
+    "@bitfinex/bfx-wrk-base": "git+https://github.com/sargekhan/bfx-wrk-base.git#feat/js-config-support",
     "async": "3.2.6",
     "bfx-svc-boot-js": "git+https://github.com/bitfinexcom/bfx-svc-boot-js.git",
     "hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git",
