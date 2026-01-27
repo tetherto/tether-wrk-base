@@ -28,9 +28,9 @@
     "@bitfinex/bfx-wrk-base": "git+https://github.com/sargekhan/bfx-wrk-base.git#feat/js-config-support",
     "async": "3.2.6",
     "bfx-svc-boot-js": "git+https://github.com/bitfinexcom/bfx-svc-boot-js.git",
-    "hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git",
-    "hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git",
-    "svc-facs-logging": "git+https://github.com/tetherto/svc-facs-logging.git"
+    "hp-svc-facs-net": "git+https://github.com/sargekhan/hp-svc-facs-net.git#feat/js-config-support",
+    "hp-svc-facs-store": "git+https://github.com/sargekhan/hp-svc-facs-store.git#feat/js-config-support",
+    "svc-facs-logging": "git+https://github.com/sargekhan/svc-facs-logging.git#feat/js-config-support"
   },
   "devDependencies": {
     "@hyperswarm/rpc": "3.3.2",
