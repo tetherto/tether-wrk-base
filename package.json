@@ -1,5 +1,5 @@
 {
-  "name": "tether-wrk-base",
+  "name": "@tetherto/tether-wrk-base",
   "version": "0.1.0",
   "description": "Tether Worker",
   "scripts": {
