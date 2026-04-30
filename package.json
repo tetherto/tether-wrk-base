@@ -1,5 +1,5 @@
 {
-  "name": "tether-wrk-base",
+  "name": "@tetherto/tether-wrk-base",
   "version": "1.0.0",
   "description": "Tether Worker",
   "scripts": {
@@ -31,10 +31,10 @@
   "dependencies": {
     "@bitfinex/bfx-svc-boot-js": "^1.2.0",
     "@bitfinex/bfx-wrk-base": "^1.1.0",
-    "async": "^3.2.6",
-    "hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git",
-    "hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git",
-    "svc-facs-logging": "git+https://github.com/tetherto/svc-facs-logging.git"
+    "@tetherto/hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git#v1.0.0",
+    "@tetherto/hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git#v1.0.0",
+    "@tetherto/svc-facs-logging": "git+https://github.com/tetherto/svc-facs-logging.git#v1.0.0",
+    "async": "^3.2.6"
   },
   "devDependencies": {
     "@hyperswarm/rpc": "^3.5.0",
