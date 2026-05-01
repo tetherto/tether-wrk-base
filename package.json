@@ -1,6 +1,6 @@
 {
-  "name": "tether-wrk-base",
-  "version": "0.1.0",
+  "name": "@tetherto/tether-wrk-base",
+  "version": "1.0.0",
   "description": "Tether Worker",
   "scripts": {
     "lint": "standard",
@@ -11,12 +11,16 @@
   },
   "author": {
     "name": "prdn",
-    "email": "paolo@bitfinex.com"
+    "email": "paolo@tether.to"
   },
   "maintainers": [
     {
       "name": "prdn",
-      "email": "paolo@bitfinex.com"
+      "email": "paolo@tether.to"
+    },
+    {
+      "name": "vigan.abd",
+      "email": "vigan.abdurrahmani@tether.to"
     }
   ],
   "keywords": [
@@ -25,18 +29,18 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
-    "@bitfinex/bfx-wrk-base": "git+https://github.com/bitfinexcom/bfx-wrk-base.git",
-    "async": "3.2.6",
-    "bfx-svc-boot-js": "git+https://github.com/bitfinexcom/bfx-svc-boot-js.git",
-    "hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git",
-    "hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git",
-    "svc-facs-logging": "git+https://github.com/tetherto/svc-facs-logging.git"
+    "@bitfinex/bfx-svc-boot-js": "^1.2.0",
+    "@bitfinex/bfx-wrk-base": "^1.1.0",
+    "@tetherto/hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git#v1.0.0",
+    "@tetherto/hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git#v1.0.0",
+    "@tetherto/svc-facs-logging": "git+https://github.com/tetherto/svc-facs-logging.git#v1.0.0",
+    "async": "^3.2.6"
   },
   "devDependencies": {
-    "@hyperswarm/rpc": "3.3.2",
-    "brittle": "3.7.0",
-    "standard": "17.1.0",
-    "test-tmp": "1.4.0"
+    "@hyperswarm/rpc": "^3.5.0",
+    "brittle": "^3.19.1",
+    "standard": "^17.1.2",
+    "test-tmp": "^1.4.0"
   },
   "repository": {
     "type": "git",
