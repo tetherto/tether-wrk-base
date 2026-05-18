@@ -31,7 +31,7 @@
   "dependencies": {
     "@bitfinex/bfx-svc-boot-js": "^1.2.0",
     "@bitfinex/bfx-wrk-base": "^1.1.0",
-    "@tetherto/hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git#v1.0.0",
+    "@tetherto/hp-svc-facs-net": "git+https://github.com/tetherto/hp-svc-facs-net.git#v1.1.0",
     "@tetherto/hp-svc-facs-store": "git+https://github.com/tetherto/hp-svc-facs-store.git#v1.0.0",
     "@tetherto/svc-facs-logging": "git+https://github.com/tetherto/svc-facs-logging.git#v1.0.0",
     "async": "^3.2.6"
