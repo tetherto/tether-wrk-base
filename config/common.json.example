@@ -1,3 +1,7 @@
 {
-  "debug": 0
+  "debug": 0,
+  "healthcheck": {
+    "path": "/app/status/heartbeat",
+    "intervalMs": 5000
+  }
 }

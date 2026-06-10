@@ -3,6 +3,7 @@
 const WrkBase = require('@bitfinex/bfx-wrk-base')
 const async = require('async')
 const crypto = require('crypto')
+const { startHeartbeat } = require('./lib/heartbeat')
 
 class TetherWrkBase extends WrkBase {
   init () {
@@ -61,7 +62,22 @@ class TetherWrkBase extends WrkBase {
         this.status.rpcClientKey = this.getRpcClientKey().toString('hex')
 
         this.saveStatus()
+      },
+      async () => {
+        this._stopHeartbeat = startHeartbeat({
+          path: this.conf.healthcheck?.path,
+          intervalMs: this.conf.healthcheck?.intervalMs
+        })
       }
+    ], cb)
+  }
+
+  _stop (cb) {
+    async.series([
+      async () => {
+        this._stopHeartbeat?.()
+      },
+      next => { super._stop(next) }
     ], cb)
   }
 }

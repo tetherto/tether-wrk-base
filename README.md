@@ -86,3 +86,63 @@ This method manages the complete startup process of the worker:
     - **`allowLocal`**: If set to `true`, the function allows connections originating from the local IP address.
 
 - The `setup-config.sh` script is used to convert all `config.json.example` files into `config.json`.
+
+---
+
+## Health checks
+
+Workers that extend `TetherWrkBase` automatically write a heartbeat file once `_start` completes. This powers Docker / Kubernetes liveness and readiness probes without requiring an HTTP server.
+
+### Dockerfile requirements
+
+The `/app/status` directory must exist in the container image, and `healthcheck.js` must be copied to a reachable path. Add both lines to the app assembly stage of your Dockerfile, before the `chown`:
+
+```dockerfile
+RUN cp /app/node_modules/@tetherto/tether-wrk-base/healthcheck.js /app/healthcheck.js
+RUN mkdir -p /app/status
+```
+
+### How it works
+
+| Probe | Mechanism | What it catches |
+|---|---|---|
+| **Readiness** | File exists and is fresh | Worker not yet started (file absent before first write) |
+| **Liveness** | File is still being updated every ~5 s | Deadlocked or stuck event loop |
+
+### Configuration
+
+Add a `healthcheck` block to `config/common.json` (all fields are optional):
+
+```json
+{
+  "healthcheck": {
+    "path": "/app/status/heartbeat",
+    "intervalMs": 5000
+  }
+}
+```
+
+Environment variables override config values:
+
+| Variable | Default | Description |
+|---|---|---|
+| `HEARTBEAT_PATH` | `/app/status/heartbeat` | Absolute path to the heartbeat file |
+| `HEARTBEAT_INTERVAL_MS` | `5000` | How often (ms) the worker updates the file |
+| `HEARTBEAT_MAX_AGE_MS` | `30000` | Max acceptable file age for `healthcheck.js` |
+
+### Kubernetes probe snippet
+
+```yaml
+livenessProbe:
+  exec:
+    command: ["node", "/app/healthcheck.js", "30000"]
+  initialDelaySeconds: 5
+  periodSeconds: 8
+  failureThreshold: 3
+
+readinessProbe:
+  exec:
+    command: ["node", "/app/healthcheck.js"]
+  periodSeconds: 3
+  failureThreshold: 2
+```
