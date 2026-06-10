@@ -25,7 +25,12 @@ function startHeartbeat (opts = {}) {
   const intervalMs = opts.intervalMs || DEFAULT_INTERVAL_MS
 
   // ensure directory exists (handles first-run and local dev outside Docker)
-  fs.mkdirSync(path.dirname(filePath), { recursive: true })
+  // silently skip if the directory can't be created (e.g. CI without Docker)
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true })
+  } catch {
+    return () => {}
+  }
 
   const timer = setInterval(() => {
     fs.writeFile(filePath, String(Date.now()), (err) => {
