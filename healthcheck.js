@@ -2,12 +2,14 @@
 
 const fs = require('fs')
 
-const file = process.env.HEARTBEAT_PATH || '/app/status/heartbeat'
-const maxAgeMs = Number(process.argv[2]) || Number(process.env.HEARTBEAT_MAX_AGE_MS) || 30000
+const file = process.argv[2] || process.env.HEARTBEAT_FILE
+const maxAgeMs = Number(process.argv[3]) || Number(process.env.HEARTBEAT_MAX_AGE_MS) || 30000
+
+if (!file) process.exit(1)
 
 try {
-  const age = Date.now() - Number(fs.readFileSync(file))
-  process.exit(age < maxAgeMs ? 0 : 1)
+  const { ts } = JSON.parse(fs.readFileSync(file, 'utf8'))
+  process.exit(Date.now() - ts < maxAgeMs ? 0 : 1)
 } catch {
   process.exit(1)
 }

@@ -1,7 +1,4 @@
 {
   "debug": 0,
-  "healthcheck": {
-    "path": "/app/status/heartbeat",
-    "intervalMs": 5000
-  }
+  "heartbeatItv": 5000
 }

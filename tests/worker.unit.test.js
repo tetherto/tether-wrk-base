@@ -40,6 +40,22 @@ test('instance id test', async function (t) {
   t.is(fileInstanceId, wrk.status.instanceId)
 })
 
+test('heartbeat file is written and fresh', async function (t) {
+  const expectedPath = path.join(wrk.ctx.root, 'status', `${wrk.prefix}.hb.json`)
+  t.is(wrk.heartbeatPath, expectedPath, 'heartbeat path sits beside the status file')
+
+  await wrk._heartbeat()
+
+  const { ts } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+  t.ok(Number.isInteger(ts), 'heartbeat file holds a numeric timestamp')
+  t.ok(Date.now() - ts < 5000, 'timestamp is recent')
+})
+
+test('heartbeat interval is registered', async function (t) {
+  t.ok(wrk.interval_0, 'interval facility is available')
+  t.ok(wrk.interval_0.mem.has('heartbeat'), 'heartbeat interval is scheduled')
+})
+
 hook('teardown hook', async function (t) {
   await teardownHook(wrk, rpc)
 })

@@ -3,7 +3,7 @@
 const WrkBase = require('@bitfinex/bfx-wrk-base')
 const async = require('async')
 const crypto = require('crypto')
-const { startHeartbeat } = require('./lib/heartbeat')
+const fs = require('fs').promises
 
 class TetherWrkBase extends WrkBase {
   init () {
@@ -18,8 +18,15 @@ class TetherWrkBase extends WrkBase {
     this.setInitFacs([
       ['fac', '@tetherto/hp-svc-facs-store', 's0', 's0', { storeDir }, 0],
       ['fac', '@tetherto/hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0 }), 1],
-      ['fac', '@tetherto/svc-facs-logging', 'l0', 'l0', { name, mixin: this.loggerMixin.bind(this) }, 2]
+      ['fac', '@tetherto/svc-facs-logging', 'l0', 'l0', { name, mixin: this.loggerMixin.bind(this) }, 2],
+      ['fac', '@bitfinex/bfx-facs-interval', '0', '0', {}, 3]
     ])
+
+    this.heartbeatPath = `${this.ctx.root}/status/${this.prefix}.hb.json`
+    this.heartbeatItv = this.conf.heartbeatItv || 5000
+
+    // 'started' is the true readiness signal — write the first heartbeat then.
+    this.once('started', this._heartbeat.bind(this))
   }
 
   loggerMixin () {
@@ -46,6 +53,18 @@ class TetherWrkBase extends WrkBase {
     await this.net_r0.startRpcServer()
   }
 
+  /**
+   * Writes the current timestamp to the heartbeat file. Its freshness powers
+   * liveness probes; its existence (only after 'started') powers readiness.
+   */
+  async _heartbeat () {
+    try {
+      await fs.writeFile(this.heartbeatPath, JSON.stringify({ ts: Date.now() }))
+    } catch (err) {
+      this.logger?.warn?.({ err }, 'heartbeat write failed')
+    }
+  }
+
   _start (cb) {
     async.series([
       next => { super._start(next) },
@@ -64,20 +83,9 @@ class TetherWrkBase extends WrkBase {
         this.saveStatus()
       },
       async () => {
-        this._stopHeartbeat = startHeartbeat({
-          path: this.conf.healthcheck?.path,
-          intervalMs: this.conf.healthcheck?.intervalMs
-        })
+        // interval fac is auto-cleared on _stop, no manual teardown needed
+        this.interval_0.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
       }
-    ], cb)
-  }
-
-  _stop (cb) {
-    async.series([
-      async () => {
-        this._stopHeartbeat?.()
-      },
-      next => { super._stop(next) }
     ], cb)
   }
 }
