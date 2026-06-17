@@ -56,6 +56,86 @@ test('heartbeat interval is registered', async function (t) {
   t.ok(wrk.interval_0.mem.has('heartbeat'), 'heartbeat interval is scheduled')
 })
 
+// spins up a fresh worker and stubs the side effects (process.exit, stop,
+// logging) so the handler can be triggered without killing the test process
+const freshWrk = async function (t, overrides = {}) {
+  const { wrk, rpc } = await setupHook(t)
+  const calls = { logged: [], exitCodes: [], stopCount: 0 }
+
+  wrk.logger.error = (...args) => calls.logged.push(args)
+
+  const realStop = wrk.stop.bind(wrk)
+  wrk.stop = (cb) => {
+    calls.stopCount++
+    if (overrides.stopCallsBack !== false) cb()
+  }
+
+  if (overrides.uncaughtErrorTimeout !== undefined) {
+    wrk.uncaughtErrorTimeout = overrides.uncaughtErrorTimeout
+  }
+  if (overrides.noLogger) wrk.logger = null
+
+  const realExit = process.exit
+  process.exit = (code) => calls.exitCodes.push(code)
+
+  t.teardown(async () => {
+    process.exit = realExit
+    wrk.stop = realStop
+    await teardownHook(wrk, rpc)
+  })
+
+  return { wrk, calls }
+}
+
+test('uncaught error handler logs, stops, then exits with code 1', async function (t) {
+  const { wrk, calls } = await freshWrk(t)
+
+  const err = new Error('boom')
+  wrk._uncaughtErrorHandler(err)
+
+  t.is(calls.stopCount, 1, 'stop called once')
+  t.is(calls.exitCodes.length, 1, 'exit called once')
+  t.is(calls.exitCodes[0], 1, 'exit code is 1')
+  t.is(calls.logged.length, 1, 'error logged once')
+  t.is(calls.logged[0][1], err, 'logged the original error object')
+  t.ok(wrk.uncaughtErrorHandling, 'handling flag set')
+})
+
+test('uncaught error handler ignores re-entry while shutting down', async function (t) {
+  const { wrk, calls } = await freshWrk(t, { stopCallsBack: false })
+
+  wrk._uncaughtErrorHandler(new Error('first'))
+  wrk._uncaughtErrorHandler(new Error('second'))
+
+  t.is(calls.stopCount, 1, 'stop only triggered by the first error')
+  t.is(calls.logged.length, 1, 'second error not logged')
+})
+
+test('uncaught error handler falls back to console without a logger', async function (t) {
+  const { wrk, calls } = await freshWrk(t, { noLogger: true })
+  const realError = console.error
+  console.error = (...args) => calls.logged.push(args)
+  t.teardown(() => { console.error = realError })
+
+  wrk._uncaughtErrorHandler(new Error('no logger'))
+
+  t.is(calls.logged.length, 1, 'logged via console fallback')
+  t.is(calls.exitCodes[0], 1, 'still exits with code 1')
+})
+
+test('uncaught error handler forces exit when stop hangs', async function (t) {
+  const { wrk, calls } = await freshWrk(t, { stopCallsBack: false, uncaughtErrorTimeout: 50 })
+
+  wrk._uncaughtErrorHandler(new Error('hang'))
+  t.is(calls.exitCodes.length, 0, 'no exit yet, stop has not called back')
+
+  await new Promise((resolve) => setTimeout(resolve, 80))
+
+  t.is(calls.exitCodes.length, 1, 'forced exit fired after timeout')
+  t.is(calls.exitCodes[0], 1, 'forced exit uses code 1')
+  t.is(calls.logged.length, 2, 'logged both the error and the timeout')
+})
+
 hook('teardown hook', async function (t) {
   await teardownHook(wrk, rpc)
 })

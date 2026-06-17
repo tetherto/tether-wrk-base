@@ -53,6 +53,35 @@ class TetherWrkBase extends WrkBase {
     await this.net_r0.startRpcServer()
   }
 
+  // intentional override of start functionality in order to handle all errors
+  start (cb = () => { }) {
+    process.on('uncaughtException', this._uncaughtErrorHandler.bind(this))
+    process.on('unhandledRejection', this._uncaughtErrorHandler.bind(this))
+    return super.start(cb)
+  }
+
+  _uncaughtErrorHandler (err) {
+    if (this.uncaughtErrorHandling) {
+      return
+    }
+    this.uncaughtErrorHandling = true
+
+    const logger = this.logger || console
+    logger.error('fatal error, shutting down', err)
+
+    // force exit if stop hangs so the process never stays up in a broken state
+    const forceExit = setTimeout(() => {
+      logger.error('graceful shutdown timed out, forcing exit')
+      process.exit(1)
+    }, this.uncaughtErrorTimeout || 10000)
+    forceExit.unref()
+
+    this.stop(() => {
+      clearTimeout(forceExit)
+      process.exit(1)
+    })
+  }
+
   /**
    * Writes the current timestamp to the heartbeat file. Its freshness powers
    * liveness probes; its existence (only after 'started') powers readiness.
