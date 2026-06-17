@@ -120,31 +120,29 @@ Heartbeat interval is configurable in `config/common.json` (optional, defaults t
 
 ### Dockerfile requirements
 
-Copy `healthcheck.js` to a reachable path in the app assembly stage:
+Copy the healthcheck script to a reachable path in the app assembly stage:
 
 ```dockerfile
-RUN cp /app/node_modules/@tetherto/tether-wrk-base/healthcheck.js /app/healthcheck.js
+RUN cp /app/node_modules/@tetherto/tether-wrk-base/scripts/healthcheck.js /app/healthcheck.js
 ```
 
 The status directory is created by the worker at runtime, so no `mkdir` is required.
 
 ### Usage
 
-`healthcheck.js` takes the heartbeat file path and an optional max-age (ms):
+The script takes the heartbeat file path as a mandatory argument and an optional `--max-age` (ms, default 10000):
 
 ```bash
-node healthcheck.js /app/status/<wtype>.hb.json 30000
-# exits 0 if the file was written within 30s, else 1
+node scripts/healthcheck.js /app/status/<wtype>.hb.json --max-age 30000
+# exits 0 if the file was written within max-age, else 1
 ```
-
-The path can also be supplied via the `HEARTBEAT_FILE` env var, and max-age via `HEARTBEAT_MAX_AGE_MS`.
 
 ### Kubernetes probe snippet
 
 ```yaml
 livenessProbe:
   exec:
-    command: ["node", "/app/healthcheck.js", "/app/status/<wtype>.hb.json", "30000"]
+    command: ["node", "/app/healthcheck.js", "/app/status/<wtype>.hb.json", "--max-age", "30000"]
   initialDelaySeconds: 5
   periodSeconds: 8
   failureThreshold: 3
