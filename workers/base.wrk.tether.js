@@ -74,11 +74,24 @@ class TetherWrkBase extends WrkBase {
     })
   }
 
-  _start (cb) {
+  _start (dhtOrCb, maybeCb) {
+    let dht
+    let cb
+    if (typeof dhtOrCb === 'function') {
+      cb = dhtOrCb
+    } else {
+      dht = dhtOrCb
+      cb = maybeCb
+    }
+
     async.series([
       next => { super._start(next) },
       async () => {
         this.logger = this.logging_l0.logger
+
+        if (dht) {
+          this.net_r0.dht = dht
+        }
 
         await this._startRpcServer()
         const rpcServer = this.net_r0.rpcServer
