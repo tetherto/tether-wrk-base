@@ -56,6 +56,36 @@ test('heartbeat interval is registered', async function (t) {
   t.ok(wrk.interval_0.mem.has('heartbeat'), 'heartbeat interval is scheduled')
 })
 
+test('heartbeat skips the write when _healthCheck reports unhealthy', async function (t) {
+  const realHealthCheck = wrk._healthCheck.bind(wrk)
+  t.teardown(() => { wrk._healthCheck = realHealthCheck })
+
+  await wrk._heartbeat()
+  const { ts: staleTs } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+
+  wrk._healthCheck = async () => false
+  await new Promise((resolve) => setTimeout(resolve, 5))
+  await wrk._heartbeat()
+
+  const { ts } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+  t.is(ts, staleTs, 'heartbeat file was not updated while unhealthy')
+})
+
+test('heartbeat treats a throwing _healthCheck as unhealthy', async function (t) {
+  const realHealthCheck = wrk._healthCheck.bind(wrk)
+  t.teardown(() => { wrk._healthCheck = realHealthCheck })
+
+  await wrk._heartbeat()
+  const { ts: staleTs } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+
+  wrk._healthCheck = async () => { throw new Error('rpc dial failed') }
+  await new Promise((resolve) => setTimeout(resolve, 5))
+  await wrk._heartbeat()
+
+  const { ts } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+  t.is(ts, staleTs, 'heartbeat file was not updated after a thrown error')
+})
+
 // spins up a fresh worker and stubs the side effects (process.exit, stop,
 // logging) so the handler can be triggered without killing the test process
 const freshWrk = async function (t, overrides = {}) {

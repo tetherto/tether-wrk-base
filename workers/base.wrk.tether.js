@@ -83,10 +83,38 @@ class TetherWrkBase extends WrkBase {
   }
 
   /**
+   * Self-dials this worker's own rpc server via a 'ping' round-trip, proving
+   * the hp-rpc stack (DHT lookup, dial, respond) is actually reachable
+   * rather than just relying on the event loop still ticking. Subclasses can
+   * override this to check other dependencies instead.
+   */
+  async _healthCheck () {
+    try {
+      await this.net_r0.jRequest(
+        this.getRpcKey().toString('hex'),
+        'ping',
+        'health',
+        { timeout: this.conf.healthCheckTimeout || 2000 }
+      )
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  /**
    * Writes the current timestamp to the heartbeat file. Its freshness powers
    * liveness probes; its existence (only after 'started') powers readiness.
+   * Skips the write when _healthCheck() reports unhealthy, so a stale file
+   * surfaces the failure to the probe instead of masking it.
    */
   async _heartbeat () {
+    const healthy = await this._healthCheck().catch((err) => {
+      this.logger?.warn?.({ err }, 'health check failed')
+      return false
+    })
+    if (!healthy) return
+
     try {
       await fs.writeFile(this.heartbeatPath, JSON.stringify({ ts: Date.now() }))
     } catch (err) {
