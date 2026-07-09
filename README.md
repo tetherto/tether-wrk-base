@@ -96,7 +96,7 @@ Workers that extend `TetherWrkBase` write a heartbeat file. The first write happ
 The heartbeat file lives alongside the worker status file:
 
 ```
-<ctx.root>/status/<prefix>.hb.json    e.g. /app/status/<wtype>.hb.json
+<ctx.root>/status/<wtype>.hb.json    e.g. /app/status/wrk-erc20-indexer-proc.hb.json
 ```
 
 It contains a single JSON object: `{ "ts": <unix-ms> }`. Because it shares the status directory (created automatically by the worker), no extra `mkdir` is needed and the path is always writable by the worker.
@@ -105,8 +105,8 @@ It contains a single JSON object: `{ "ts": <unix-ms> }`. Because it shares the s
 
 | Probe | Mechanism | What it catches |
 |---|---|---|
-| **Readiness** | File exists and is fresh | Worker not yet started (file absent until `started` fires) |
-| **Liveness** | File still updated every ~5 s | Deadlocked or stuck event loop |
+| **Readiness** | File exists and is fresh (written within the probe's `--max-age`, default 10 s) | Worker not yet started (file absent until `started` fires) |
+| **Liveness** | File still updated every ~5 s | Deadlocked/stuck event loop, or hp-rpc unreachable (the write is skipped when a self-dial `ping` fails — see `_healthCheck()`) |
 
 The recurring write is managed by `@bitfinex/bfx-facs-interval`, which is cleared automatically on `_stop` — no manual teardown.
 

@@ -5,6 +5,11 @@ const async = require('async')
 const crypto = require('crypto')
 const fs = require('fs').promises
 
+// kept well under the heartbeat interval — bfx-facs-interval fires on a raw
+// setInterval that doesn't await _heartbeat(), so a slow dial would stack
+// up overlapping self-checks during a real outage instead of just detecting it
+const HEALTH_CHECK_TIMEOUT_MS = 2000
+
 class TetherWrkBase extends WrkBase {
   init () {
     super.init()
@@ -22,7 +27,7 @@ class TetherWrkBase extends WrkBase {
       ['fac', '@bitfinex/bfx-facs-interval', '0', '0', {}, 3]
     ])
 
-    this.heartbeatPath = `${this.ctx.root}/status/${this.prefix}.hb.json`
+    this.heartbeatPath = `${this.ctx.root}/status/${this.ctx.wtype}.hb.json`
     this.heartbeatItv = this.conf.heartbeatItv || 5000
 
     // 'started' is the true readiness signal — write the first heartbeat then.
@@ -94,7 +99,7 @@ class TetherWrkBase extends WrkBase {
         this.getRpcKey().toString('hex'),
         'ping',
         'health',
-        { timeout: this.conf.healthCheckTimeout || 2000 }
+        { timeout: HEALTH_CHECK_TIMEOUT_MS }
       )
       return true
     } catch {
@@ -140,7 +145,6 @@ class TetherWrkBase extends WrkBase {
         this.saveStatus()
       },
       async () => {
-        // interval fac is auto-cleared on _stop, no manual teardown needed
         this.interval_0.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
       }
     ], cb)

@@ -41,7 +41,7 @@ test('instance id test', async function (t) {
 })
 
 test('heartbeat file is written and fresh', async function (t) {
-  const expectedPath = path.join(wrk.ctx.root, 'status', `${wrk.prefix}.hb.json`)
+  const expectedPath = path.join(wrk.ctx.root, 'status', `${wrk.ctx.wtype}.hb.json`)
   t.is(wrk.heartbeatPath, expectedPath, 'heartbeat path sits beside the status file')
 
   await wrk._heartbeat()
