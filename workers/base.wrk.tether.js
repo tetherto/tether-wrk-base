@@ -5,9 +5,6 @@ const async = require('async')
 const crypto = require('crypto')
 const fs = require('fs').promises
 
-// must stay well under the heartbeat interval, or a slow dial overlaps with the next one
-const HEALTH_CHECK_TIMEOUT_MS = 2000
-
 class TetherWrkBase extends WrkBase {
   init () {
     super.init()
@@ -88,12 +85,7 @@ class TetherWrkBase extends WrkBase {
   // self-dials via 'ping' to prove hp-rpc is actually reachable; subclasses may override
   async _healthCheck () {
     try {
-      await this.net_r0.jRequest(
-        this.getRpcKey().toString('hex'),
-        'ping',
-        'health',
-        { timeout: HEALTH_CHECK_TIMEOUT_MS }
-      )
+      await this.net_r0.jRequest(this.getRpcKey().toString('hex'), 'ping', 'health')
       return true
     } catch {
       return false
