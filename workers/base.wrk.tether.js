@@ -5,9 +5,7 @@ const async = require('async')
 const crypto = require('crypto')
 const fs = require('fs').promises
 
-// kept well under the heartbeat interval — bfx-facs-interval fires on a raw
-// setInterval that doesn't await _heartbeat(), so a slow dial would stack
-// up overlapping self-checks during a real outage instead of just detecting it
+// must stay well under the heartbeat interval, or a slow dial overlaps with the next one
 const HEALTH_CHECK_TIMEOUT_MS = 2000
 
 class TetherWrkBase extends WrkBase {
@@ -115,7 +113,7 @@ class TetherWrkBase extends WrkBase {
    */
   async _heartbeat () {
     const healthy = await this._healthCheck().catch((err) => {
-      this.logger?.warn?.({ err }, 'health check failed')
+      this.logger.warn({ err }, 'health check failed')
       return false
     })
     if (!healthy) return
@@ -123,7 +121,7 @@ class TetherWrkBase extends WrkBase {
     try {
       await fs.writeFile(this.heartbeatPath, JSON.stringify({ ts: Date.now() }))
     } catch (err) {
-      this.logger?.warn?.({ err }, 'heartbeat write failed')
+      this.logger.warn({ err }, 'heartbeat write failed')
     }
   }
 
