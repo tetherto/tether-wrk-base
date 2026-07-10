@@ -94,6 +94,11 @@ const freshWrk = async function (t, overrides = {}) {
 
   wrk.logger.error = (...args) => calls.logged.push(args)
 
+  // stopping the real heartbeat now (rather than waiting for teardown's real
+  // stop) prevents a real self-dial from firing in the background for the
+  // rest of the test, which otherwise leaks live DHT connections across tests
+  wrk.interval_0.del('heartbeat')
+
   const realStop = wrk.stop.bind(wrk)
   wrk.stop = (cb) => {
     calls.stopCount++

@@ -84,12 +84,8 @@ class TetherWrkBase extends WrkBase {
 
   // self-dials via 'ping' to prove hp-rpc is actually reachable; subclasses may override
   async _healthCheck () {
-    try {
-      await this.net_r0.jRequest(this.getRpcKey().toString('hex'), 'ping', 'health')
-      return true
-    } catch {
-      return false
-    }
+    await this.net_r0.jRequest(this.getRpcKey().toString('hex'), 'ping', 'health')
+    return true
   }
 
   // skips the write when unhealthy, so a stale file surfaces the failure to probes
