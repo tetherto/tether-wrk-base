@@ -11,7 +11,8 @@ const cmd = command(
   flag('--max-age|-m [ms]', `max heartbeat age in ms before unhealthy (default ${DEFAULT_MAX_AGE_MS})`),
   () => {
     const file = cmd.args.file
-    const maxAgeMs = Number(cmd.flags.maxAge) || DEFAULT_MAX_AGE_MS
+    const rawMaxAge = Number(cmd.flags.maxAge)
+    const maxAgeMs = Number.isFinite(rawMaxAge) && rawMaxAge >= 0 ? rawMaxAge : DEFAULT_MAX_AGE_MS
 
     try {
       const { ts } = JSON.parse(fs.readFileSync(file, 'utf8'))
