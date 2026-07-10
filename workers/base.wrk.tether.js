@@ -24,9 +24,12 @@ class TetherWrkBase extends WrkBase {
 
     this.heartbeatPath = `${this.ctx.root}/status/${this.ctx.wtype}.hb.json`
     this.heartbeatItv = this.conf.heartbeatItv || 5000
+    this.heartbeatEnabled = this.conf.heartbeatEnabled === true
 
-    // 'started' is the true readiness signal — write the first heartbeat then.
-    this.once('started', this._heartbeat.bind(this))
+    if (this.heartbeatEnabled) {
+      // 'started' is the true readiness signal — write the first heartbeat then.
+      this.once('started', this._heartbeat.bind(this))
+    }
   }
 
   loggerMixin () {
@@ -121,7 +124,9 @@ class TetherWrkBase extends WrkBase {
         this.saveStatus()
       },
       async () => {
-        this.interval_0.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
+        if (this.heartbeatEnabled) {
+          this.interval_0.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
+        }
       }
     ], cb)
   }

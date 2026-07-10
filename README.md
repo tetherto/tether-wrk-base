@@ -91,7 +91,9 @@ This method manages the complete startup process of the worker:
 
 ## Health checks
 
-Workers that extend `TetherWrkBase` write a heartbeat file. The first write happens on the `started` event (true readiness); subsequent writes happen on an interval (liveness). This powers Docker / Kubernetes probes without an HTTP server.
+Workers that extend `TetherWrkBase` can write a heartbeat file. The first write happens on the `started` event (true readiness); subsequent writes happen on an interval (liveness). This powers Docker / Kubernetes probes without an HTTP server.
+
+**Opt-in, off by default.** Set `heartbeatEnabled: true` in `config/common.json` to turn it on — a worker that doesn't set this flag gets no heartbeat file, no interval, and no self-dial `ping` traffic.
 
 The heartbeat file lives alongside the worker status file:
 
@@ -112,11 +114,17 @@ The recurring write is managed by `@bitfinex/bfx-facs-interval`, which is cleare
 
 ### Configuration
 
-Heartbeat interval is configurable in `config/common.json` (optional, defaults to 5000 ms):
+Both settings go in `config/common.json`:
 
 ```json
-{ "heartbeatItv": 5000 }
+{
+  "heartbeatEnabled": true,
+  "heartbeatItv": 5000
+}
 ```
+
+- `heartbeatEnabled` — required to turn the feature on. Defaults to `false` (off) so existing workers aren't affected unless they explicitly opt in.
+- `heartbeatItv` — write interval in ms. Optional, defaults to 5000.
 
 ### Dockerfile requirements
 

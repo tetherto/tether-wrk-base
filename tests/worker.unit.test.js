@@ -2,6 +2,8 @@
 
 const fs = require('fs')
 const path = require('path')
+const tmp = require('test-tmp')
+const Worker = require('../workers/base.wrk.tether.js')
 const { setupHook, teardownHook } = require('./lib/hooks.js')
 const { test, hook } = require('brittle')
 
@@ -54,6 +56,23 @@ test('heartbeat file is written and fresh', async function (t) {
 test('heartbeat interval is registered', async function (t) {
   t.ok(wrk.interval_0, 'interval facility is available')
   t.ok(wrk.interval_0.mem.has('heartbeat'), 'heartbeat interval is scheduled')
+})
+
+test('heartbeat stays off unless heartbeatEnabled is explicitly true', async function (t) {
+  const dir = await tmp(t)
+  const root = path.resolve(__dirname, '..')
+  const w = new Worker({}, { env: 'test', tmpdir: path.resolve(dir, '.'), root, wtype: 'tether-wrk-base' })
+
+  const realLoadConf = w.loadConf.bind(w)
+  w.loadConf = (c) => {
+    realLoadConf(c)
+    w.conf.heartbeatEnabled = false
+  }
+
+  w.init()
+
+  t.is(w.heartbeatEnabled, false, 'heartbeat is off when the flag is false')
+  t.is(w.listenerCount('started'), 0, 'no heartbeat listener bound on the started event')
 })
 
 test('heartbeat skips the write when _healthCheck reports unhealthy', async function (t) {
