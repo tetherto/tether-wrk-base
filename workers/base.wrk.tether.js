@@ -59,7 +59,7 @@ class TetherWrkBase extends WrkBase {
     this.uncaughtErrorHandling = true
 
     const logger = this.logger || console
-    logger.error('fatal error, shutting down', err)
+    logger.error({ err }, 'fatal error, shutting down')
 
     // force exit if stop hangs so the process never stays up in a broken state
     const forceExit = setTimeout(() => {
