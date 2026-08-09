@@ -75,14 +75,35 @@ This method manages the complete startup process of the worker:
 
     ```json
     {
-      "r0": {
-        "allow": [],
-        "allowLocal": true
+      "r0": {}
+    }
+    ```
+
+    The `r0` object accepts the following optional keys:
+    - **`allow`**: An array used as an allowlist to validate incoming connections based on their `remotePublicKey`.
+    - **`allowLocal`**: If set to `true`, the function allows connections originating from the local IP address.
+
+  - **`svc-facs-logging`**: A facility that provides structured logging (via `pino`), optionally transported over
+    the network. Its configuration is loaded from `config/facs/logging.config.json`.
+    Example of `logging.config.json`:
+
+    ```json
+    {
+      "l0": {
+        "debug": 0,
+        "transport": {
+          "enabled": true,
+          "secretKey": "my-secret-key-123",
+          "topic": "pino-logs-channel-1"
+        }
       }
     }
     ```
 
-    - **`allow`**: An array used as an allowlist to validate incoming connections based on their `remotePublicKey`.  
-    - **`allowLocal`**: If set to `true`, the function allows connections originating from the local IP address.
+    - **`debug`**: Controls the logging level, same as the `debug` key in `common.json`.
+    - **`transport`**: Optional settings for streaming logs to a remote channel.
+      - **`enabled`**: If set to `true`, log transport is turned on.
+      - **`secretKey`**: The secret key used to derive the transport channel.
+      - **`topic`**: The topic name used to identify the log channel.
 
 - The `setup-config.sh` script is used to convert all `config.json.example` files into `config.json`.
