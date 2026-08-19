@@ -49,5 +49,9 @@
   "bugs": {
     "url": "https://github.com/tetherto/tether-wrk-base/issues"
   },
-  "homepage": "https://github.com/tetherto/tether-wrk-base#readme"
+  "homepage": "https://github.com/tetherto/tether-wrk-base#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }
