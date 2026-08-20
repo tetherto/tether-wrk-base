@@ -84,3 +84,78 @@ This method manages the complete startup process of the worker:
     - **`allow`**: An array used as an allowlist to validate incoming connections based on their `remotePublicKey`.  
 
 - The `setup-config.sh` script is used to convert all `config.json.example` files into `config.json`.
+
+---
+
+## Health checks
+
+Workers that extend `TetherWrkBase` can write a heartbeat file. The first write happens on the `started` event (true readiness); subsequent writes happen on an interval (liveness). This powers Docker / Kubernetes probes without an HTTP server.
+
+**Opt-in, off by default.** Set `heartbeatEnabled: true` in `config/common.json` to turn it on — a worker that doesn't set this flag gets no heartbeat file, no interval, and no self-dial `ping` traffic.
+
+The heartbeat file lives alongside the worker status file:
+
+```
+<ctx.root>/status/<wtype>.hb.json    e.g. /app/status/wrk-erc20-indexer-proc.hb.json
+```
+
+It contains a single JSON object: `{ "ts": <unix-ms> }`. Because it shares the status directory (created automatically by the worker), no extra `mkdir` is needed and the path is always writable by the worker.
+
+### How it works
+
+| Probe | Mechanism | What it catches |
+|---|---|---|
+| **Readiness** | File exists and is fresh (written within the probe's `--max-age`, default 10 s) | Worker not yet started (file absent until `started` fires) |
+| **Liveness** | File still updated every ~5 s | Deadlocked/stuck event loop, or hp-rpc unreachable (the write is skipped when a self-dial `ping` fails — see `_healthCheck()`) |
+
+The recurring write is managed by `@bitfinex/bfx-facs-interval`, which is cleared automatically on `_stop` — no manual teardown.
+
+### Configuration
+
+Both settings go in `config/common.json`:
+
+```json
+{
+  "heartbeatEnabled": true,
+  "heartbeatItv": 5000
+}
+```
+
+- `heartbeatEnabled` — required to turn the feature on. Defaults to `false` (off) so existing workers aren't affected unless they explicitly opt in.
+- `heartbeatItv` — write interval in ms. Optional, defaults to 5000.
+
+### Dockerfile requirements
+
+Copy the healthcheck script to a reachable path in the app assembly stage:
+
+```dockerfile
+RUN cp /app/node_modules/@tetherto/tether-wrk-base/scripts/healthcheck.js /app/healthcheck.js
+```
+
+The status directory is created by the worker at runtime, so no `mkdir` is required.
+
+### Usage
+
+The script takes the heartbeat file path as a mandatory argument and an optional `--max-age` (ms, default 10000):
+
+```bash
+node scripts/healthcheck.js /app/status/<wtype>.hb.json --max-age 30000
+# exits 0 if the file was written within max-age, else 1
+```
+
+### Kubernetes probe snippet
+
+```yaml
+livenessProbe:
+  exec:
+    command: ["node", "/app/healthcheck.js", "/app/status/<wtype>.hb.json", "--max-age", "30000"]
+  initialDelaySeconds: 5
+  periodSeconds: 8
+  failureThreshold: 3
+
+readinessProbe:
+  exec:
+    command: ["node", "/app/healthcheck.js", "/app/status/<wtype>.hb.json"]
+  periodSeconds: 3
+  failureThreshold: 2
+```

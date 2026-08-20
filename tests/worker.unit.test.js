@@ -2,6 +2,8 @@
 
 const fs = require('fs')
 const path = require('path')
+const tmp = require('test-tmp')
+const Worker = require('../workers/base.wrk.tether.js')
 const { setupHook, teardownHook } = require('./lib/hooks.js')
 const { test, hook } = require('brittle')
 
@@ -40,6 +42,69 @@ test('instance id test', async function (t) {
   t.is(fileInstanceId, wrk.status.instanceId)
 })
 
+test('heartbeat file is written and fresh', async function (t) {
+  const expectedPath = path.join(wrk.ctx.root, 'status', `${wrk.ctx.wtype}.hb.json`)
+  t.is(wrk.heartbeatPath, expectedPath, 'heartbeat path sits beside the status file')
+
+  await wrk._heartbeat()
+
+  const { ts } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+  t.ok(Number.isInteger(ts), 'heartbeat file holds a numeric timestamp')
+  t.ok(Date.now() - ts < 5000, 'timestamp is recent')
+})
+
+test('heartbeat interval is registered', async function (t) {
+  t.ok(wrk.interval_0, 'interval facility is available')
+  t.ok(wrk.interval_0.mem.has('heartbeat'), 'heartbeat interval is scheduled')
+})
+
+test('heartbeat stays off unless heartbeatEnabled is explicitly true', async function (t) {
+  const dir = await tmp(t)
+  const root = path.resolve(__dirname, '..')
+  const w = new Worker({}, { env: 'test', tmpdir: path.resolve(dir, '.'), root, wtype: 'tether-wrk-base' })
+
+  const realLoadConf = w.loadConf.bind(w)
+  w.loadConf = (c) => {
+    realLoadConf(c)
+    w.conf.heartbeatEnabled = false
+  }
+
+  w.init()
+
+  t.is(w.heartbeatEnabled, false, 'heartbeat is off when the flag is false')
+  t.is(w.listenerCount('started'), 0, 'no heartbeat listener bound on the started event')
+})
+
+test('heartbeat skips the write when _healthCheck reports unhealthy', async function (t) {
+  const realHealthCheck = wrk._healthCheck.bind(wrk)
+  t.teardown(() => { wrk._healthCheck = realHealthCheck })
+
+  await wrk._heartbeat()
+  const { ts: staleTs } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+
+  wrk._healthCheck = async () => false
+  await new Promise((resolve) => setTimeout(resolve, 5))
+  await wrk._heartbeat()
+
+  const { ts } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+  t.is(ts, staleTs, 'heartbeat file was not updated while unhealthy')
+})
+
+test('heartbeat treats a throwing _healthCheck as unhealthy', async function (t) {
+  const realHealthCheck = wrk._healthCheck.bind(wrk)
+  t.teardown(() => { wrk._healthCheck = realHealthCheck })
+
+  await wrk._heartbeat()
+  const { ts: staleTs } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+
+  wrk._healthCheck = async () => { throw new Error('rpc dial failed') }
+  await new Promise((resolve) => setTimeout(resolve, 5))
+  await wrk._heartbeat()
+
+  const { ts } = JSON.parse(fs.readFileSync(wrk.heartbeatPath, 'utf-8'))
+  t.is(ts, staleTs, 'heartbeat file was not updated after a thrown error')
+})
+
 // spins up a fresh worker and stubs the side effects (process.exit, stop,
 // logging) so the handler can be triggered without killing the test process
 const freshWrk = async function (t, overrides = {}) {
@@ -48,21 +113,28 @@ const freshWrk = async function (t, overrides = {}) {
 
   wrk.logger.error = (...args) => calls.logged.push(args)
 
+  // stopping the real heartbeat now (rather than waiting for teardown's real
+  // stop) prevents a real self-dial from firing in the background for the
+  // rest of the test, which otherwise leaks live DHT connections across tests
+  wrk.interval_0.del('heartbeat')
+
   const realStop = wrk.stop.bind(wrk)
   wrk.stop = (cb) => {
     calls.stopCount++
     if (overrides.stopCallsBack !== false) cb()
   }
 
-  if (overrides.uncaughtErrorTimeout !== undefined) {
-    wrk.uncaughtErrorTimeout = overrides.uncaughtErrorTimeout
-  }
+  // never leave the 10s production default armed: when a test makes stop() hang,
+  // the force-exit timer outlives it and calls the real process.exit(1) mid-run
+  wrk.uncaughtErrorTimeout = overrides.uncaughtErrorTimeout ?? 50
+
   if (overrides.noLogger) wrk.logger = null
 
   const realExit = process.exit
   process.exit = (code) => calls.exitCodes.push(code)
 
   t.teardown(async () => {
+    clearTimeout(wrk._forceExitTimer)
     process.exit = realExit
     wrk.stop = realStop
     await teardownHook(wrk, rpc)
