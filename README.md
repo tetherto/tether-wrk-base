@@ -76,14 +76,12 @@ This method manages the complete startup process of the worker:
     ```json
     {
       "r0": {
-        "allow": [],
-        "allowLocal": true
+        "allow": []
       }
     }
     ```
 
     - **`allow`**: An array used as an allowlist to validate incoming connections based on their `remotePublicKey`.  
-    - **`allowLocal`**: If set to `true`, the function allows connections originating from the local IP address.
 
 - The `setup-config.sh` script is used to convert all `config.json.example` files into `config.json`.
 

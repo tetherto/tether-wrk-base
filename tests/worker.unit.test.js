@@ -153,7 +153,7 @@ test('uncaught error handler logs, stops, then exits with code 1', async functio
   t.is(calls.exitCodes.length, 1, 'exit called once')
   t.is(calls.exitCodes[0], 1, 'exit code is 1')
   t.is(calls.logged.length, 1, 'error logged once')
-  t.is(calls.logged[0][1], err, 'logged the original error object')
+  t.is(calls.logged[0][0].err, err, 'logged the original error object as pino merge object')
   t.ok(wrk.uncaughtErrorHandling, 'handling flag set')
 })
 
