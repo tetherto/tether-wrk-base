@@ -124,15 +124,17 @@ const freshWrk = async function (t, overrides = {}) {
     if (overrides.stopCallsBack !== false) cb()
   }
 
-  if (overrides.uncaughtErrorTimeout !== undefined) {
-    wrk.uncaughtErrorTimeout = overrides.uncaughtErrorTimeout
-  }
+  // never leave the 10s production default armed: when a test makes stop() hang,
+  // the force-exit timer outlives it and calls the real process.exit(1) mid-run
+  wrk.uncaughtErrorTimeout = overrides.uncaughtErrorTimeout ?? 50
+
   if (overrides.noLogger) wrk.logger = null
 
   const realExit = process.exit
   process.exit = (code) => calls.exitCodes.push(code)
 
   t.teardown(async () => {
+    clearTimeout(wrk._forceExitTimer)
     process.exit = realExit
     wrk.stop = realStop
     await teardownHook(wrk, rpc)

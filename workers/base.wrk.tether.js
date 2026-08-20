@@ -58,9 +58,22 @@ class TetherWrkBase extends WrkBase {
 
   // intentional override of start functionality in order to handle all errors
   start (cb = () => { }) {
-    process.on('uncaughtException', this._uncaughtErrorHandler.bind(this))
-    process.on('unhandledRejection', this._uncaughtErrorHandler.bind(this))
+    // kept on the instance so _stop9 can detach it again
+    this._onUncaughtError = this._uncaughtErrorHandler.bind(this)
+    process.on('uncaughtException', this._onUncaughtError)
+    process.on('unhandledRejection', this._onUncaughtError)
     return super.start(cb)
+  }
+
+  // detached last, so the whole shutdown stays guarded but a stopped worker can
+  // no longer exit the process on behalf of one that is still running
+  _stop9 (cb) {
+    if (this._onUncaughtError) {
+      process.removeListener('uncaughtException', this._onUncaughtError)
+      process.removeListener('unhandledRejection', this._onUncaughtError)
+      this._onUncaughtError = null
+    }
+    super._stop9(cb)
   }
 
   _uncaughtErrorHandler (err) {
@@ -72,15 +85,16 @@ class TetherWrkBase extends WrkBase {
     const logger = this.logger || console
     logger.error('fatal error, shutting down', err)
 
-    // force exit if stop hangs so the process never stays up in a broken state
-    const forceExit = setTimeout(() => {
+    // force exit if stop hangs so the process never stays up in a broken state;
+    // handle is on the instance so a pending force exit can be cancelled
+    this._forceExitTimer = setTimeout(() => {
       logger.error('graceful shutdown timed out, forcing exit')
       process.exit(1)
     }, this.uncaughtErrorTimeout || 10000)
-    forceExit.unref()
+    this._forceExitTimer.unref()
 
     this.stop(() => {
-      clearTimeout(forceExit)
+      clearTimeout(this._forceExitTimer)
       process.exit(1)
     })
   }
@@ -93,16 +107,21 @@ class TetherWrkBase extends WrkBase {
 
   // skips the write when unhealthy, so a stale file surfaces the failure to probes
   async _heartbeat () {
-    const healthy = await this._healthCheck().catch((err) => {
-      this.logger.warn({ err }, 'health check failed')
-      return false
-    })
-    if (!healthy) return
+    // runs fire-and-forget from the interval facility, so it must never reject;
+    // the logger can already be gone when a tick lands mid-shutdown
+    const logger = this.logger || console
+
+    try {
+      if (!await this._healthCheck()) return
+    } catch (err) {
+      logger.warn({ err }, 'health check failed')
+      return
+    }
 
     try {
       await fs.writeFile(this.heartbeatPath, JSON.stringify({ ts: Date.now() }))
     } catch (err) {
-      this.logger.warn({ err }, 'heartbeat write failed')
+      logger.warn({ err }, 'heartbeat write failed')
     }
   }
 
