@@ -29,12 +29,17 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
+    "@bitfinex/bfx-facs-interval": "^1.0.0",
     "@bitfinex/bfx-svc-boot-js": "^1.3.1",
     "@bitfinex/bfx-wrk-base": "^1.1.0",
     "@tetherto/hp-svc-facs-net": "^2.0.1",
     "@tetherto/hp-svc-facs-store": "^1.0.1",
     "@tetherto/svc-facs-logging": "^1.1.4",
-    "async": "^3.2.6"
+    "async": "^3.2.6",
+    "paparam": "^1.8.5"
+  },
+  "overrides": {
+    "@bitfinex/bfx-facs-base": "^1.1.0"
   },
   "devDependencies": {
     "@hyperswarm/rpc": "^3.5.0",
