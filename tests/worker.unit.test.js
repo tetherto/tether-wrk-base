@@ -2,16 +2,14 @@
 
 const fs = require('fs')
 const path = require('path')
-const tmp = require('test-tmp')
-const Worker = require('../workers/base.wrk.tether.js')
 const { setupHook, teardownHook } = require('./lib/hooks.js')
 const { test, hook } = require('brittle')
 
 let wrk = null
 let rpc = null
 
-hook('setup hook', async function (t) {
-  ({ wrk, rpc } = await setupHook(t))
+hook('setup hook', async function () {
+  ({ wrk, rpc } = await setupHook())
 })
 
 test('rpc public key and client key test', async function (t) {
@@ -59,20 +57,12 @@ test('heartbeat interval is registered', async function (t) {
 })
 
 test('heartbeat stays off unless heartbeatEnabled is explicitly true', async function (t) {
-  const dir = await tmp(t)
-  const root = path.resolve(__dirname, '..')
-  const w = new Worker({}, { env: 'test', tmpdir: path.resolve(dir, '.'), root, wtype: 'tether-wrk-base' })
+  const { wrk, rpc } = await setupHook({ conf: { heartbeatEnabled: false } })
+  t.teardown(() => teardownHook(wrk, rpc))
 
-  const realLoadConf = w.loadConf.bind(w)
-  w.loadConf = (c) => {
-    realLoadConf(c)
-    w.conf.heartbeatEnabled = false
-  }
-
-  w.init()
-
-  t.is(w.heartbeatEnabled, false, 'heartbeat is off when the flag is false')
-  t.is(w.listenerCount('started'), 0, 'no heartbeat listener bound on the started event')
+  t.is(wrk.heartbeatEnabled, false, 'heartbeat is off when the flag is false')
+  t.is(wrk.interval_0.mem.has('heartbeat'), false, 'no heartbeat interval scheduled')
+  t.is(fs.existsSync(wrk.heartbeatPath), false, 'no heartbeat file written on start')
 })
 
 test('heartbeat skips the write when _healthCheck reports unhealthy', async function (t) {
@@ -108,7 +98,7 @@ test('heartbeat treats a throwing _healthCheck as unhealthy', async function (t)
 // spins up a fresh worker and stubs the side effects (process.exit, stop,
 // logging) so the handler can be triggered without killing the test process
 const freshWrk = async function (t, overrides = {}) {
-  const { wrk, rpc } = await setupHook(t)
+  const { wrk, rpc } = await setupHook()
   const calls = { logged: [], exitCodes: [], stopCount: 0 }
 
   wrk.logger.error = (...args) => calls.logged.push(args)

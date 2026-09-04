@@ -4,6 +4,7 @@ const WrkBase = require('@bitfinex/bfx-wrk-base')
 const async = require('async')
 const crypto = require('crypto')
 const fs = require('fs').promises
+const path = require('path')
 
 class TetherWrkBase extends WrkBase {
   init () {
@@ -22,13 +23,16 @@ class TetherWrkBase extends WrkBase {
       ['fac', '@bitfinex/bfx-facs-interval', '0', '0', {}, 3]
     ])
 
-    this.heartbeatPath = `${this.ctx.root}/status/${this.ctx.wtype}.hb.json`
+    this.heartbeatPath = path.join(this.ctx.root, 'status', `${this.ctx.wtype}.hb.json`)
     this.heartbeatItv = this.conf.heartbeatItv || 5000
     this.heartbeatEnabled = this.conf.heartbeatEnabled === true
 
     if (this.heartbeatEnabled) {
-      // 'started' is the true readiness signal — write the first heartbeat then.
-      this.once('started', this._heartbeat.bind(this))
+      // 'started' fires after every _start in the class chain, so the heartbeat begins at true readiness
+      this.once('started', () => {
+        this._heartbeat()
+        this.interval_0.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
+      })
     }
   }
 
@@ -58,22 +62,9 @@ class TetherWrkBase extends WrkBase {
 
   // intentional override of start functionality in order to handle all errors
   start (cb = () => { }) {
-    // kept on the instance so _stop9 can detach it again
-    this._onUncaughtError = this._uncaughtErrorHandler.bind(this)
-    process.on('uncaughtException', this._onUncaughtError)
-    process.on('unhandledRejection', this._onUncaughtError)
+    process.on('uncaughtException', this._uncaughtErrorHandler.bind(this))
+    process.on('unhandledRejection', this._uncaughtErrorHandler.bind(this))
     return super.start(cb)
-  }
-
-  // detached last, so the whole shutdown stays guarded but a stopped worker can
-  // no longer exit the process on behalf of one that is still running
-  _stop9 (cb) {
-    if (this._onUncaughtError) {
-      process.removeListener('uncaughtException', this._onUncaughtError)
-      process.removeListener('unhandledRejection', this._onUncaughtError)
-      this._onUncaughtError = null
-    }
-    super._stop9(cb)
   }
 
   _uncaughtErrorHandler (err) {
@@ -105,14 +96,13 @@ class TetherWrkBase extends WrkBase {
     return true
   }
 
-  // skips the write when unhealthy, so a stale file surfaces the failure to probes
   async _heartbeat () {
-    // runs fire-and-forget from the interval facility, so it must never reject;
-    // the logger can already be gone when a tick lands mid-shutdown
     const logger = this.logger || console
 
     try {
-      if (!await this._healthCheck()) return
+      if (!await this._healthCheck()) {
+        return
+      }
     } catch (err) {
       logger.warn({ err }, 'health check failed')
       return
@@ -141,11 +131,6 @@ class TetherWrkBase extends WrkBase {
         this.status.rpcClientKey = this.getRpcClientKey().toString('hex')
 
         this.saveStatus()
-      },
-      async () => {
-        if (this.heartbeatEnabled) {
-          this.interval_0.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
-        }
       }
     ], cb)
   }
