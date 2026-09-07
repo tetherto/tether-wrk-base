@@ -20,18 +20,19 @@ class TetherWrkBase extends WrkBase {
       ['fac', '@tetherto/hp-svc-facs-store', 's0', 's0', { storeDir }, 0],
       ['fac', '@tetherto/hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0 }), 1],
       ['fac', '@tetherto/svc-facs-logging', 'l0', 'l0', { name, mixin: this.loggerMixin.bind(this) }, 2],
-      ['fac', '@bitfinex/bfx-facs-interval', '0', '0', {}, 3]
+      ['fac', '@bitfinex/bfx-facs-interval', 'base', 'base', {}, 3]
     ])
 
-    this.heartbeatPath = path.join(this.ctx.root, 'status', `${this.ctx.wtype}.hb.json`)
+    this.heartbeatPath = path.join(this.ctx.root, 'status', `${this.prefix}.hb.json`)
     this.heartbeatItv = this.conf.heartbeatItv || 5000
     this.heartbeatEnabled = this.conf.heartbeatEnabled === true
+    this._heartbeatRun = null
 
     if (this.heartbeatEnabled) {
       // 'started' fires after every _start in the class chain, so the heartbeat begins at true readiness
       this.once('started', () => {
         this._heartbeat()
-        this.interval_0.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
+        this.interval_base.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
       })
     }
   }
@@ -90,13 +91,21 @@ class TetherWrkBase extends WrkBase {
     })
   }
 
-  // self-dials via 'ping' to prove hp-rpc is actually reachable; subclasses may override
   async _healthCheck () {
     await this.net_r0.jRequest(this.getRpcKey().toString('hex'), 'ping', 'health')
     return true
   }
 
-  async _heartbeat () {
+  _heartbeat () {
+    if (!this._heartbeatRun) {
+      this._heartbeatRun = this._runHeartbeat().finally(() => {
+        this._heartbeatRun = null
+      })
+    }
+    return this._heartbeatRun
+  }
+
+  async _runHeartbeat () {
     const logger = this.logger || console
 
     try {
@@ -104,7 +113,9 @@ class TetherWrkBase extends WrkBase {
         return
       }
     } catch (err) {
-      logger.warn({ err }, 'health check failed')
+      if (!this.stopping) {
+        logger.warn({ err }, 'health check failed')
+      }
       return
     }
 
