@@ -1,0 +1,12 @@
+'use strict'
+
+module.exports = {
+  l0: {
+    debug: Number(process.env.DEBUG) || 0,
+    transport: {
+      enabled: process.env.LOG_TRANSPORT_ENABLED !== 'false',
+      secretKey: process.env.LOG_TRANSPORT_SECRET || 'my-secret-key-123',
+      topic: process.env.LOG_TRANSPORT_TOPIC || 'pino-logs-channel-1'
+    }
+  }
+}
