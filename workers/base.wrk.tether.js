@@ -47,9 +47,22 @@ class TetherWrkBase extends WrkBase {
 
   // intentional override of start functionality in order to handle all errors
   start (cb = () => { }) {
-    process.on('uncaughtException', this._uncaughtErrorHandler.bind(this))
-    process.on('unhandledRejection', this._uncaughtErrorHandler.bind(this))
+    this._boundUncaughtErrorHandler = this._uncaughtErrorHandler.bind(this)
+    process.on('uncaughtException', this._boundUncaughtErrorHandler)
+    process.on('unhandledRejection', this._boundUncaughtErrorHandler)
     return super.start(cb)
+  }
+
+  // removes the listeners registered in `start()` so repeated start/stop
+  // cycles (e.g. worker restarts within the same process) don't leak
+  // listeners on the shared `process` object
+  stop (cb = () => { }) {
+    if (this._boundUncaughtErrorHandler) {
+      process.off('uncaughtException', this._boundUncaughtErrorHandler)
+      process.off('unhandledRejection', this._boundUncaughtErrorHandler)
+      this._boundUncaughtErrorHandler = null
+    }
+    return super.stop(cb)
   }
 
   _uncaughtErrorHandler (err) {

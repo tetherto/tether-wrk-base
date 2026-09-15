@@ -120,6 +120,23 @@ test('uncaught error handler forces exit when stop hangs', async function (t) {
   t.is(calls.logged.length, 2, 'logged both the error and the timeout')
 })
 
+test('stop removes the uncaught error listeners registered by start, and a restart re-adds them', async function (t) {
+  const before = {
+    uncaughtException: process.listenerCount('uncaughtException'),
+    unhandledRejection: process.listenerCount('unhandledRejection')
+  }
+
+  await new Promise((resolve) => wrk.stop(resolve))
+
+  t.is(process.listenerCount('uncaughtException'), before.uncaughtException - 1, 'stop removes the uncaughtException listener')
+  t.is(process.listenerCount('unhandledRejection'), before.unhandledRejection - 1, 'stop removes the unhandledRejection listener')
+
+  await new Promise((resolve) => wrk.start(resolve))
+
+  t.is(process.listenerCount('uncaughtException'), before.uncaughtException, 'restarting re-adds the uncaughtException listener')
+  t.is(process.listenerCount('unhandledRejection'), before.unhandledRejection, 'restarting re-adds the unhandledRejection listener')
+})
+
 hook('teardown hook', async function (t) {
   await teardownHook(wrk, rpc)
 })
