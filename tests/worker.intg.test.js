@@ -13,8 +13,8 @@ async function rpcReq (pubKey, met, data) {
   return JSON.parse(rep.toString())
 }
 
-hook('setup hook', async function (t) {
-  ({ wrk, rpc } = await setupHook(t))
+hook('setup hook', async function () {
+  ({ wrk, rpc } = await setupHook())
 })
 
 test('ping test', async function (t) {

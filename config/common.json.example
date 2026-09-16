@@ -1,3 +1,5 @@
 {
-  "debug": 0
+  "debug": 0,
+  "heartbeatEnabled": true,
+  "heartbeatItv": 5000
 }
