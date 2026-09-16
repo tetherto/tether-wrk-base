@@ -108,7 +108,7 @@ It contains a single JSON object: `{ "ts": <unix-ms> }`. Because it shares the s
 | **Readiness** | File exists and is fresh (written within the probe's `--max-age`, default 10 s) | Worker not yet started (file absent until `started` fires) |
 | **Liveness** | File still updated every ~5 s | Deadlocked/stuck event loop, or hp-rpc unreachable (the write is skipped when a self-dial `ping` fails — see `_healthCheck()`) |
 
-A tick is skipped while the previous self-dial is still pending, so a slow DHT never stacks up requests. The recurring write is managed by the base's own `@bitfinex/bfx-facs-interval` facility, `interval_base`, which is separate from a worker's `interval_0` and is cleared automatically on stop — no manual teardown.
+A tick is skipped while the previous self-dial is still pending, so a slow DHT never stacks up requests. The recurring write is managed by `@bitfinex/bfx-facs-interval`, which the base registers as `interval_0` and which is cleared automatically on stop — no manual teardown.
 
 ### Configuration
 

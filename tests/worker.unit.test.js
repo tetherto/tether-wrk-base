@@ -52,8 +52,8 @@ test('heartbeat file is written and fresh', async function (t) {
 })
 
 test('heartbeat interval is registered', async function (t) {
-  t.ok(wrk.interval_base, 'interval facility is available')
-  t.ok(wrk.interval_base.mem.has('heartbeat'), 'heartbeat interval is scheduled')
+  t.ok(wrk.interval_0, 'interval facility is available')
+  t.ok(wrk.interval_0.mem.has('heartbeat'), 'heartbeat interval is scheduled')
 })
 
 test('heartbeat stays off unless heartbeatEnabled is explicitly true', async function (t) {
@@ -61,18 +61,18 @@ test('heartbeat stays off unless heartbeatEnabled is explicitly true', async fun
   t.teardown(() => teardownHook(wrk, rpc))
 
   t.is(wrk.heartbeatEnabled, false, 'heartbeat is off when the flag is false')
-  t.is(wrk.interval_base.mem.has('heartbeat'), false, 'no heartbeat interval scheduled')
+  t.is(wrk.interval_0.mem.has('heartbeat'), false, 'no heartbeat interval scheduled')
   t.is(fs.existsSync(wrk.heartbeatPath), false, 'no heartbeat file written on start')
 })
 
 const stubHealthCheck = async function (t, fn) {
-  wrk.interval_base.del('heartbeat')
+  wrk.interval_0.del('heartbeat')
   await wrk._heartbeat()
   wrk._healthCheck = fn
 
   t.teardown(() => {
     delete wrk._healthCheck
-    wrk.interval_base.add('heartbeat', wrk._heartbeat.bind(wrk), wrk.heartbeatItv)
+    wrk.interval_0.add('heartbeat', wrk._heartbeat.bind(wrk), wrk.heartbeatItv)
   })
 }
 
@@ -128,7 +128,7 @@ const freshWrk = async function (t, overrides = {}) {
   wrk.logger.error = (...args) => calls.logged.push(args)
 
   // no heartbeat tick may run while logger and process.exit are stubbed below
-  wrk.interval_base.del('heartbeat')
+  wrk.interval_0.del('heartbeat')
 
   const realStop = wrk.stop.bind(wrk)
   wrk.stop = (cb) => {

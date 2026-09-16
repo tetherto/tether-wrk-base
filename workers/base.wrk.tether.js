@@ -20,7 +20,7 @@ class TetherWrkBase extends WrkBase {
       ['fac', '@tetherto/hp-svc-facs-store', 's0', 's0', { storeDir }, 0],
       ['fac', '@tetherto/hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0 }), 1],
       ['fac', '@tetherto/svc-facs-logging', 'l0', 'l0', { name, mixin: this.loggerMixin.bind(this) }, 2],
-      ['fac', '@bitfinex/bfx-facs-interval', 'base', 'base', {}, 3]
+      ['fac', '@bitfinex/bfx-facs-interval', '0', '0', {}, 3]
     ])
 
     this.heartbeatPath = path.join(this.ctx.root, 'status', `${this.prefix}.hb.json`)
@@ -32,7 +32,7 @@ class TetherWrkBase extends WrkBase {
       // 'started' fires after every _start in the class chain, so the heartbeat begins at true readiness
       this.once('started', () => {
         this._heartbeat()
-        this.interval_base.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
+        this.interval_0.add('heartbeat', this._heartbeat.bind(this), this.heartbeatItv)
       })
     }
   }
