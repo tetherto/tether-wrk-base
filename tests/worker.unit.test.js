@@ -40,6 +40,15 @@ test('instance id test', async function (t) {
   t.is(fileInstanceId, wrk.status.instanceId)
 })
 
+test('RPC readiness resets when the same worker instance starts again', async function (t) {
+  const { wrk, rpc } = await setupHook({ conf: { heartbeatEnabled: false } })
+  t.teardown(() => teardownHook(wrk, rpc))
+  await new Promise(resolve => wrk.stop(resolve))
+  await new Promise(resolve => wrk.start(resolve))
+  const response = await rpc.request(wrk.getRpcKey(), 'ping', Buffer.from('restarted'), { timeout: 5000 })
+  t.is(response.toString(), 'restarted')
+})
+
 test('heartbeat file is written and fresh', async function (t) {
   const expectedPath = path.join(wrk.ctx.root, 'status', `${wrk.prefix}.hb.json`)
   t.is(wrk.heartbeatPath, expectedPath, 'heartbeat path sits beside the status file')
