@@ -7,6 +7,10 @@ npm-debug.log
 config/*.json
 !config/facs/*.json.example
 config/facs/*.json
+!config/*.js.example
+config/*.js
+!config/facs/*.js.example
+config/facs/*.js
 status
 logs
 sec

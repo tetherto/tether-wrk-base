@@ -1,0 +1,5 @@
+'use strict'
+
+module.exports = {
+  debug: Number(process.env.DEBUG) || 0
+}
