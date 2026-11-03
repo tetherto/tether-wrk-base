@@ -5,7 +5,6 @@ const async = require('async')
 const crypto = require('crypto')
 const fs = require('fs').promises
 const path = require('path')
-const RpcStartupGate = require('./lib/rpc.startup.gate')
 
 class TetherWrkBase extends WrkBase {
   init () {
@@ -17,9 +16,10 @@ class TetherWrkBase extends WrkBase {
       : `store/${this.storeDir || this.ctx.rack}`
 
     const name = this.getInstanceId()
+    const rpcReady = new Promise((resolve) => this.once('started', resolve))
     this.setInitFacs([
       ['fac', '@tetherto/hp-svc-facs-store', 's0', 's0', { storeDir }, 0],
-      ['fac', '@tetherto/hp-svc-facs-net', 'r0', 'r0', this._getNetFacilityOptions.bind(this), 1],
+      ['fac', '@tetherto/hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0, rpcServerReady: () => rpcReady }), 1],
       ['fac', '@tetherto/svc-facs-logging', 'l0', 'l0', { name, mixin: this.loggerMixin.bind(this) }, 2],
       ['fac', '@bitfinex/bfx-facs-interval', '0', '0', {}, 3]
     ])
@@ -40,14 +40,6 @@ class TetherWrkBase extends WrkBase {
 
   loggerMixin () {
     return {}
-  }
-
-  _getNetFacilityOptions () {
-    const startup = this._rpcStartupGate
-    return {
-      fac_store: this.store_s0,
-      rpcServerReady: () => startup.isReady()
-    }
   }
 
   getRpcKey () {
@@ -72,22 +64,9 @@ class TetherWrkBase extends WrkBase {
 
   // intentional override of start functionality in order to handle all errors
   start (cb = () => { }) {
-    const startup = new RpcStartupGate()
-    this._rpcStartupGate = startup
-    this._onRpcStartup = () => startup.open()
-    this.once('started', this._onRpcStartup)
     process.on('uncaughtException', this._uncaughtErrorHandler.bind(this))
     process.on('unhandledRejection', this._uncaughtErrorHandler.bind(this))
     return super.start(cb)
-  }
-
-  stop (cb) {
-    if (this._onRpcStartup) {
-      this.removeListener('started', this._onRpcStartup)
-      this._onRpcStartup = null
-    }
-    this._rpcStartupGate?.close()
-    return super.stop(cb)
   }
 
   _uncaughtErrorHandler (err) {
