@@ -42,6 +42,8 @@ This method returns the RPC client key of the worker.
 
 This method starts the RPC server using the `hp-svc-facs-net` facility. It can be overridden if extra logic is needed while starting the RPC server.
 
+Incoming RPC connections wait until the worker emits `started`, so methods registered anywhere in the `_start` chain are in place before the first request is served. This also covers overrides that call `this.net_r0.startRpcServer()` directly.
+
 #### `_start(cb)`
 
 This method manages the complete startup process of the worker:

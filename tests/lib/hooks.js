@@ -32,7 +32,7 @@ const setupHook = async function (opts = {}) {
   const rpc = new RPC()
   const root = createRoot(dir, opts.conf)
 
-  const wrk = new Worker(
+  const wrk = new (opts.Worker || Worker)(
     {},
     {
       env: 'test',

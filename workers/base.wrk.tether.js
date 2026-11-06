@@ -16,9 +16,10 @@ class TetherWrkBase extends WrkBase {
       : `store/${this.storeDir || this.ctx.rack}`
 
     const name = this.getInstanceId()
+    const rpcReady = new Promise((resolve) => this.once('started', resolve))
     this.setInitFacs([
       ['fac', '@tetherto/hp-svc-facs-store', 's0', 's0', { storeDir }, 0],
-      ['fac', '@tetherto/hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0 }), 1],
+      ['fac', '@tetherto/hp-svc-facs-net', 'r0', 'r0', () => ({ fac_store: this.store_s0, rpcServerReady: () => rpcReady }), 1],
       ['fac', '@tetherto/svc-facs-logging', 'l0', 'l0', { name, mixin: this.loggerMixin.bind(this) }, 2],
       ['fac', '@bitfinex/bfx-facs-interval', '0', '0', {}, 3]
     ])
