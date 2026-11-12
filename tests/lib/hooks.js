@@ -31,8 +31,9 @@ const setupHook = async function (opts = {}) {
   const dir = await tmp()
   const rpc = new RPC()
   const root = createRoot(dir, opts.conf)
+  const WrkClass = opts.Worker || Worker
 
-  const wrk = new Worker(
+  const wrk = new WrkClass(
     {},
     {
       env: 'test',
