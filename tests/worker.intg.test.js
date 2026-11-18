@@ -41,13 +41,15 @@ test('requests sent during startup wait for methods registered later in _start',
   let res = null
 
   class LateMethodWorker extends Worker {
-    async _startRpcServer () {
-      const { rpcServerReady } = this.net_r0.opts
-      this.net_r0.opts.rpcServerReady = () => {
-        onWaiting()
-        return rpcServerReady()
+    init () {
+      super.init()
+      const startupFinished = this._pStartupFinished
+      this._pStartupFinished = {
+        then: (resolve, reject) => {
+          onWaiting()
+          return startupFinished.then(resolve, reject)
+        }
       }
-      await super._startRpcServer()
     }
 
     _start (cb) {
